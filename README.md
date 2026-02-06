@@ -10,7 +10,7 @@
 
 ### 📚 学习内容
 - 40个适合一年级学生的英语单词
-- 3个难度等级：简单（3字母）、普通（4字母）、困难（5字母）
+- 3个难度等级：简单（3字母）、普通（4字母）、困难（5字母+）
 - 图文结合：每个单词配有emoji表情和中文释义
 
 ### 🏆 成就系统
@@ -119,7 +119,7 @@ npm start
 
 ## 📝 词汇列表
 
-游戏包含40个精选单词，涵盖：
+游戏包含120个精选单词，涵盖：
 - 动物：cat, dog, fish, bird, bear等
 - 物品：pen, cup, book, cake, ball等
 - 自然：sun, moon, star, tree, flower等
@@ -168,8 +168,7 @@ export const wordsDatabase: Word[] = [
 MIT License
 
 ## 👨‍💻 作者
-
-CodeBanana AI Assistant
+nuckydong@gmail.com
 
 ## 🙏 致谢
 
