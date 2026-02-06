@@ -280,18 +280,30 @@ const LetterGameWithCallback = forwardRef<LetterGameRef, LetterGameWithCallbackP
         {/* Feedback Display */}
         {showFeedback && (
           <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-            <div className={`bg-white rounded-3xl p-8 text-center shadow-2xl transform transition-all duration-300 ${
+            <div className={`bg-gradient-to-br from-yellow-50 via-pink-50 to-blue-50 rounded-3xl p-8 text-center shadow-2xl transform transition-all duration-300 ${
               showFeedback === 'correct' ? 'scale-100' : 'scale-110'
             }`}>
               {showFeedback === 'correct' ? (
-                <div>
-                  <div className="text-8xl mb-4">🎉</div>
-                  <div className="text-3xl font-bold text-green-600 mb-4">正确！</div>
-                  <div className="bg-blue-50 rounded-2xl p-4 mb-4">
-                    <div className="text-4xl font-bold text-blue-600 mb-2">{currentWord.word}</div>
-                    <div className="text-xl text-gray-600">{currentWord.translation}</div>
+                <div className="flex flex-col items-center">
+                  <div className="relative mb-4">
+                    <div className="text-8xl animate-bounce">🎉</div>
+                    <div className="absolute -top-4 -left-6 text-3xl animate-pulse">⭐</div>
+                    <div className="absolute -top-6 -right-4 text-3xl animate-pulse">🌟</div>
+                    <div className="absolute -bottom-4 left-0 text-3xl animate-pulse">✨</div>
                   </div>
-                  <div className="text-sm text-gray-500">🔊 听一听标准发音</div>
+                  <div className="text-3xl font-extrabold text-green-500 mb-2 tracking-widest">太棒啦！</div>
+                  <div className="text-lg text-gray-600 mb-4">你拼对了这个单词</div>
+                  <div className="bg-gradient-to-r from-yellow-100 via-pink-100 to-blue-100 rounded-3xl p-4 mb-4 shadow-inner w-full max-w-md">
+                    <div className="text-4xl font-extrabold text-blue-600 mb-2 tracking-wider">{currentWord.word}</div>
+                    <div className="text-xl text-gray-700 mb-1">{currentWord.translation}</div>
+                    <div className="text-sm text-gray-500">看看你能连续答对多少个？</div>
+                  </div>
+                  <div className="flex items-center gap-2 text-yellow-500 mb-2">
+                    <span className="text-2xl animate-bounce">⭐</span>
+                    <span className="text-2xl animate-bounce delay-150">⭐</span>
+                    <span className="text-2xl animate-bounce delay-300">⭐</span>
+                  </div>
+                  <div className="text-xs text-gray-400">小提示：听一听发音，再试试更难的关卡</div>
                 </div>
               ) : (
                 <div>

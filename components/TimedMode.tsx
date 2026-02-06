@@ -158,14 +158,27 @@ useEffect(() => {
       {/* Word Completion Feedback Popup */}
       {completedWord && (
         <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
-          <div className="bg-white rounded-3xl p-6 shadow-2xl border-4 border-green-400 min-w-[300px] animate-bounce pointer-events-auto">
-            <div className="text-center">
-              <div className="text-5xl mb-2">✅</div>
-              <div className="text-3xl font-bold text-gray-800 mb-2">
-                {completedWord.word}
+          <div className="pointer-events-auto bg-gradient-to-br from-yellow-50 via-pink-50 to-blue-50 rounded-3xl p-6 shadow-2xl border-4 border-yellow-300 min-w-[280px] max-w-xs transform animate-bounce">
+            <div className="text-center flex flex-col items-center">
+              <div className="relative mb-3">
+                <div className="text-5xl">🎉</div>
+                <div className="absolute -top-3 -left-4 text-2xl animate-pulse">⭐</div>
+                <div className="absolute -top-4 -right-3 text-2xl animate-pulse">🌟</div>
               </div>
-              <div className="text-xl text-gray-600">
-                {completedWord.translation}
+              <div className="text-2xl font-extrabold text-green-500 mb-1 tracking-widest">太棒啦！</div>
+              <div className="text-sm text-gray-600 mb-3">你又拼对了一个单词</div>
+              <div className="bg-white/70 rounded-2xl p-3 mb-3 shadow-inner w-full">
+                <div className="text-2xl font-extrabold text-blue-600 mb-1 tracking-wider">
+                  {completedWord.word}
+                </div>
+                <div className="text-base text-gray-700">
+                  {completedWord.translation}
+                </div>
+              </div>
+              <div className="flex items-center gap-1 text-yellow-500 text-xl">
+                <span className="animate-bounce">⭐</span>
+                <span className="animate-bounce delay-150">⭐</span>
+                <span className="animate-bounce delay-300">⭐</span>
               </div>
             </div>
           </div>

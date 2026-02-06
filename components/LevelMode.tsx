@@ -342,53 +342,74 @@ export default function LevelMode() {
 
       {/* Word Success Modal */}
       {showWordSuccess && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={(e) => e.target === e.currentTarget && setShowWordSuccess(false)}>
-          <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="text-8xl mb-4">🎉</div>
-            <div className="text-3xl font-bold text-green-600 mb-4">{wordSuccessMessage}</div>
-            
-            {/* 显示完整单词 - 蓝色卡片 */}
-            {completedWord && (
-              <div className="bg-blue-50 rounded-2xl p-4 mb-4">
-                <div className="text-4xl font-bold text-blue-600 mb-2">{completedWord.word}</div>
-                <div className="text-xl text-gray-600">{completedWord.translation}</div>
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={(e) => e.target === e.currentTarget && setShowWordSuccess(false)}
+        >
+          <div
+            className="bg-gradient-to-br from-yellow-50 via-pink-50 to-blue-50 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl transform"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex flex-col items-center">
+              <div className="relative mb-4">
+                <div className="text-7xl">🎉</div>
+                <div className="absolute -top-3 -left-6 text-3xl animate-pulse">⭐</div>
+                <div className="absolute -top-5 -right-4 text-3xl animate-pulse">🌟</div>
+                <div className="absolute -bottom-4 left-1 text-3xl animate-pulse">✨</div>
               </div>
-            )}
-            
-            <button 
-              type="button"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('🔊 鼠标按下发音按钮', completedWord);
-                if (completedWord) {
-                  console.log('🔊 准备播放:', completedWord.word);
-                  speakWord(completedWord.word);
-                } else {
-                  console.log('❌ 没有完成的单词');
-                }
-              }}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('🔊 点击发音按钮', completedWord);
-              }}
-              className="text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-100 mb-4 cursor-pointer transition-all duration-200 bg-blue-50 px-4 py-3 rounded-xl border-2 border-blue-200 hover:border-blue-400 relative shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-            >
-              🔊 听一听标准发音
-            </button>
-            
-            <div className="bg-green-100 rounded-2xl p-4 mb-6">
-              <div className="text-xl font-bold text-green-600">{correctWords} / {wordsPerLevel}</div>
-              <div className="text-sm text-gray-700">单词完成</div>
+              <div className="text-3xl font-extrabold text-green-500 mb-2 tracking-widest">
+                {wordSuccessMessage || '太棒啦！'}
+              </div>
+              <div className="text-sm text-gray-600 mb-4">你离闯关成功又近了一步</div>
+
+              {/* 显示完整单词 - 彩色卡片 */}
+              {completedWord && (
+                <div className="bg-white/80 rounded-2xl p-4 mb-4 shadow-inner">
+                  <div className="text-4xl font-extrabold text-blue-600 mb-2 tracking-wider">
+                    {completedWord.word}
+                  </div>
+                  <div className="text-xl text-gray-700">{completedWord.translation}</div>
+                </div>
+              )}
+
+              <button
+                type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (completedWord) {
+                    speakWord(completedWord.word);
+                  }
+                }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                className="text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-100 mb-4 cursor-pointer transition-all duration-200 bg-blue-50 px-4 py-3 rounded-xl border-2 border-blue-200 hover:border-blue-400 relative shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+              >
+                🔊 听一听标准发音
+              </button>
+
+              <div className="bg-green-100 rounded-2xl p-4 mb-6">
+                <div className="text-xl font-bold text-green-600">
+                  {correctWords} / {wordsPerLevel}
+                </div>
+                <div className="text-sm text-gray-700">本关单词进度</div>
+              </div>
+
+              <div className="flex items-center justify-center gap-1 text-yellow-500 text-2xl mb-4">
+                <span className="animate-bounce">⭐</span>
+                <span className="animate-bounce delay-150">⭐</span>
+                <span className="animate-bounce delay-300">⭐</span>
+              </div>
+
+              <button
+                onClick={continueGame}
+                className="w-full bg-gradient-to-r from-green-400 to-green-600 text-white font-bold py-4 px-8 rounded-2xl text-lg hover:from-green-500 hover:to-green-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
+              >
+                {correctWords >= wordsPerLevel ? '完成关卡! 🎊' : '继续下一个单词 ➡️'}
+              </button>
             </div>
-            
-            <button
-              onClick={continueGame}
-              className="w-full bg-gradient-to-r from-green-400 to-green-600 text-white font-bold py-4 px-8 rounded-2xl text-lg hover:from-green-500 hover:to-green-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
-            >
-              {correctWords >= wordsPerLevel ? '完成关卡! 🎊' : '继续下一个单词 ➡️'}
-            </button>
           </div>
         </div>
       )}
