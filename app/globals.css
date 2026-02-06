@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #FFF5F7;
+  --foreground: #2D3436;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: 'Comic Sans MS', 'Arial', sans-serif;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Custom animations for kids */
+@keyframes pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.animate-pop {
+  animation: pop 0.3s ease-in-out;
+}
+
+/* Button press effect */
+.btn-press:active {
+  transform: scale(0.95);
+}
