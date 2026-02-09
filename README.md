@@ -95,14 +95,18 @@ npm start
 ├── app/
 │   ├── globals.css          # 全局样式
 │   ├── layout.tsx           # 根布局
-│   └── page.tsx             # 主页面（游戏路由）
+│   |── page.tsx             # 主页面（游戏路由）
+|   └── api
+|       └── tts
+|            └── route.ts    # 调用百度API的实现（朗读，只调一次；后续存入本地public\tts-cache）
 ├── components/
 │   ├── Achievements.tsx     # 成就系统组件
 │   ├── LevelMode.tsx        # 闯关模式组件
 │   ├── MainMenu.tsx         # 主菜单组件
 │   └── TimedMode.tsx        # 计时挑战组件
 ├── lib/
-│   └── words.ts             # 单词数据库
+│   |── words.ts             # 单词数据库
+|   └── seepch.ts            # 单词朗读，优先读本地（pulic/tts-cache）；本地没有会调用百度的API，需要配置环境变量：BAIDU_API_KEY="yours"和 BAIDU_SECRET_KEY="yours" ，可以去百度申请（免费额度够用）
 ├── store/
 │   └── gameStore.ts         # 游戏状态管理
 └── public/
