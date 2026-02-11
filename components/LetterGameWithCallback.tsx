@@ -21,7 +21,7 @@ const LetterGameWithCallback = forwardRef<LetterGameRef, LetterGameWithCallbackP
   const [currentWord, setCurrentWord] = useState<Word | null>(null);
   const [scrambledLetters, setScrambledLetters] = useState<string[]>([]);
   const [selectedLetters, setSelectedLetters] = useState<string[]>([]);
-  const [availableLetters, setAvailableLetters] = useState<string[]>([]);
+  const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
   const [showFeedback, setShowFeedback] = useState<'correct' | 'wrong' | null>(null);
   const [isComplete, setIsComplete] = useState(false);
   
@@ -59,8 +59,8 @@ const LetterGameWithCallback = forwardRef<LetterGameRef, LetterGameWithCallbackP
     setCurrentWord(word);
     const scrambled = scrambleWord(word.word);
     setScrambledLetters(scrambled);
-    setAvailableLetters(scrambled);
     setSelectedLetters([]);
+    setSelectedIndices([]);
     setShowFeedback(null);
     setIsComplete(false);
   }, [difficulty]);
@@ -86,10 +86,9 @@ const LetterGameWithCallback = forwardRef<LetterGameRef, LetterGameWithCallbackP
   const handleLetterSelect = (letter: string, index: number) => {
     if (isComplete) return;
 
-    // Move letter from available to selected
-    const newAvailable = [...availableLetters];
-    newAvailable.splice(index, 1);
-    setAvailableLetters(newAvailable);
+    // 标记这个备选下标已被使用
+    setSelectedIndices(prev => (prev.includes(index) ? prev : [...prev, index]));
+    // 记录被选中的字母，用于上方显示
     setSelectedLetters(prev => [...prev, letter]);
   };
 
@@ -97,11 +96,19 @@ const LetterGameWithCallback = forwardRef<LetterGameRef, LetterGameWithCallbackP
   const handleLetterRemove = (index: number) => {
     if (isComplete) return;
 
-    const removedLetter = selectedLetters[index];
-    const newSelected = [...selectedLetters];
-    newSelected.splice(index, 1);
-    setSelectedLetters(newSelected);
-    setAvailableLetters(prev => [...prev, removedLetter]);
+    // 从已选字母列表中移除对应位置
+    setSelectedLetters(prev => {
+      const next = [...prev];
+      next.splice(index, 1);
+      return next;
+    });
+
+    // 同步移除对应的备选下标，恢复下面的按钮可用
+    setSelectedIndices(prev => {
+      const next = [...prev];
+      next.splice(index, 1);
+      return next;
+    });
   };
 
   // Check answer when all letters are selected
@@ -161,7 +168,7 @@ const LetterGameWithCallback = forwardRef<LetterGameRef, LetterGameWithCallbackP
         // Reset after delay
         setTimeout(() => {
           setSelectedLetters([]);
-          setAvailableLetters(scrambledLetters);
+          setSelectedIndices([]);
           setShowFeedback(null);
         }, 1000);
       }
@@ -172,7 +179,7 @@ const LetterGameWithCallback = forwardRef<LetterGameRef, LetterGameWithCallbackP
   const handleClear = () => {
     if (isComplete) return;
     setSelectedLetters([]);
-    setAvailableLetters(scrambledLetters);
+    setSelectedIndices([]);
   };
 
   if (!currentWord) {
@@ -246,16 +253,23 @@ const LetterGameWithCallback = forwardRef<LetterGameRef, LetterGameWithCallbackP
           </div>
           
           <div className="flex flex-wrap justify-center gap-2">
-            {availableLetters.map((letter, index) => (
-              <button
-                key={`available-${index}-${letter}`}
-                onClick={() => handleLetterSelect(letter, index)}
-                className="w-12 h-12 bg-green-500 text-white text-xl font-bold rounded-xl shadow-lg transform transition-all duration-200 hover:scale-110 hover:bg-green-600 active:scale-95"
-                disabled={isComplete}
-              >
-                {letter.toLowerCase()}
-              </button>
-            ))}
+            {scrambledLetters.map((letter, index) => {
+              const isUsed = selectedIndices.includes(index);
+              return (
+                <button
+                  key={`available-${index}-${letter}`}
+                  onClick={() => handleLetterSelect(letter, index)}
+                  className={`w-12 h-12 text-xl font-bold rounded-xl shadow-lg transform transition-all duration-200 ${
+                    isUsed
+                      ? 'bg-gray-300 text-gray-400 cursor-not-allowed opacity-60'
+                      : 'bg-green-500 text-white hover:scale-110 hover:bg-green-600 active:scale-95'
+                  }`}
+                  disabled={isComplete || isUsed}
+                >
+                  {letter.toLowerCase()}
+                </button>
+              );
+            })}
           </div>
         </div>
 

@@ -23,6 +23,8 @@ export default function LevelMode() {
 
   // Get progress for current difficulty (with fallback to empty array)
   const currentDifficultyProgress = getCurrentDifficultyProgress();
+  const currentLevelProgress = currentDifficultyProgress.find(p => p.level === currentLevel);
+  const levelStars = currentLevelProgress?.stars ?? 0;
   
   // Initialize difficulty progress if needed
   useEffect(() => {
@@ -33,11 +35,14 @@ export default function LevelMode() {
   const [correctWords, setCorrectWords] = useState(0);
   const [startTime, setStartTime] = useState<number>(0);
   const [isLevelComplete, setIsLevelComplete] = useState(false);
-  const [levelStars, setLevelStars] = useState(0);
   const [showWordSuccess, setShowWordSuccess] = useState(false);
   const [wordSuccessMessage, setWordSuccessMessage] = useState('');
   const [completedWord, setCompletedWord] = useState<{word: string, translation: string, id: number} | null>(null);
   const [wordHistory, setWordHistory] = useState<number[]>([]);
+  const [levelScore, setLevelScore] = useState(0);
+  const [currentLevelStars, setCurrentLevelStars] = useState(0);
+  const [showLevelStartModal, setShowLevelStartModal] = useState(false);
+  const [isLevelShattering, setIsLevelShattering] = useState(false);
   
   // Game reference for manual control
   const gameRef = useRef<LetterGameRef>(null);
@@ -74,41 +79,36 @@ export default function LevelMode() {
 
   const startLevel = useCallback((level: number) => {
     console.log(`🚀 Starting level ${level} for ${difficulty}`);
-    setCurrentLevel(level); // Update the current level in store
+    setCurrentLevel(level);
     setShowLevelSelect(false);
     setCorrectWords(0);
-    setWordHistory([]); // Reset word history
-    setStartTime(Date.now());
+    setWordHistory([]);
     setIsLevelComplete(false);
-    setLevelStars(0);
+    setLevelScore(0);
+    setShowLevelStartModal(true);
   }, [difficulty, setCurrentLevel]);
 
   // Handle word completion
   const handleWordComplete = useCallback((word?: {word: string, translation: string, id: number}) => {
-    // Store the completed word for display
     if (word) {
       setCompletedWord(word);
-      
-      // Update word history (keep last 5)
       setWordHistory(prev => {
         const newHistory = [...prev, word.id];
-        return newHistory.slice(-5); // Keep only last 5
+        return newHistory.slice(-5);
       });
     }
     
     setCorrectWords(prevCorrectWords => {
       const newCorrectWords = prevCorrectWords + 1;
-      
-      // Show success message
       const successMessage = '正确！';
-      
-      // Show success popup
       setWordSuccessMessage(successMessage);
       setShowWordSuccess(true);
-      
       return newCorrectWords;
     });
-  }, []);
+
+    const points = difficulty === 'easy' ? 10 : difficulty === 'medium' ? 20 : 30;
+    setLevelScore(prev => prev + points);
+  }, [difficulty]);
   
   // Continue to next word or complete level
   const continueGame = () => {
@@ -123,7 +123,7 @@ export default function LevelMode() {
       if (timeTaken <= 30) stars = 3;
       else if (timeTaken <= 60) stars = 2;
       
-      setLevelStars(stars);
+      setCurrentLevelStars(stars);
       setIsLevelComplete(true);
       completeLevel(stars, timeTaken);
     } else {
@@ -150,10 +150,20 @@ export default function LevelMode() {
   // Retry level
   const retryLevel = () => {
     setCorrectWords(0);
-    setWordHistory([]); // Reset word history
-    setStartTime(Date.now());
+    setWordHistory([]);
     setIsLevelComplete(false);
-    setLevelStars(0);
+    setLevelScore(0);
+    setShowLevelStartModal(true);
+  };
+
+  const handleStartLevel = () => {
+    if (isLevelShattering) return;
+    setIsLevelShattering(true);
+    setTimeout(() => {
+      setShowLevelStartModal(false);
+      setStartTime(Date.now());
+      setIsLevelShattering(false);
+    }, 500);
   };
 
   return (
@@ -285,7 +295,7 @@ export default function LevelMode() {
         </div>
       )}
 
-      {/* Game Screen */}
+      {/* Game Screen：无论是否显示开始模态框，都先渲染游戏界面 */}
       {!showLevelSelect && !isLevelComplete && (
         <div>
           {/* Header with progress */}
@@ -337,6 +347,32 @@ export default function LevelMode() {
             showBuiltInFeedback={false}
             wordHistory={wordHistory}
           />
+        </div>
+      )}
+
+      {/* Level Start Modal - 毛玻璃 + 玻璃击碎效果 */}
+      {!showLevelSelect && !isLevelComplete && showLevelStartModal && (
+        <div
+          className={`fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/20 backdrop-blur-sm transition-opacity duration-500 ${
+            isLevelShattering ? 'opacity-0' : 'opacity-100'
+          }`}
+        >
+          <div
+            className={`relative rounded-3xl p-8 max-w-md w-full text-center shadow-2xl border border-white/40 bg-white/20 backdrop-blur-xl transform transition-transform duration-500 ${
+              isLevelShattering ? 'scale-110' : 'scale-100'
+            }`}
+          >
+            <div className="text-6xl mb-4">🚀</div>
+            <h2 className="text-3xl font-bold text-gray-100 mb-4">准备好了吗？</h2>
+            <p className="text-gray-200 mb-6">点击“开始”后，本关计时才会开始。</p>
+
+            <button
+              onClick={handleStartLevel}
+              className="w-full bg-blue-500/80 text-white font-bold py-4 px-8 rounded-2xl text-lg hover:bg-blue-500 transition-all duration-200 transform hover:scale-105 shadow-lg"
+            >
+              ▶️ 开始
+            </button>
+          </div>
         </div>
       )}
 
@@ -396,12 +432,12 @@ export default function LevelMode() {
                 </div>
                 <div className="text-sm text-gray-700">本关单词进度</div>
               </div>
-
-              <div className="flex items-center justify-center gap-1 text-yellow-500 text-2xl mb-4">
+              
+              {/* <div className="flex items-center justify-center gap-1 text-yellow-500 text-2xl mb-4">
                 <span className="animate-bounce">⭐</span>
                 <span className="animate-bounce delay-150">⭐</span>
                 <span className="animate-bounce delay-300">⭐</span>
-              </div>
+              </div> */}
 
               <button
                 onClick={continueGame}
@@ -442,8 +478,8 @@ export default function LevelMode() {
               </div>
               
               <div className="bg-purple-100 rounded-2xl p-4">
-                <div className="text-2xl font-bold text-purple-600">{score}</div>
-                <div className="text-sm text-gray-700">总得分</div>
+                <div className="text-2xl font-bold text-purple-600">{levelScore}</div>
+                <div className="text-sm text-gray-700">本关得分</div>
               </div>
             </div>
 

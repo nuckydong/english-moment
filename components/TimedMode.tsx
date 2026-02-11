@@ -15,15 +15,31 @@ const {
 } = useGameStore();
   
   const [timeLeft, setTimeLeft] = useState(120);
-  const [isGameActive, setIsGameActive] = useState(true);
+  const [isGameActive, setIsGameActive] = useState(false);
   const [wordsCompleted, setWordsCompleted] = useState(0);
   const [showGameOver, setShowGameOver] = useState(false);
   const [completedWord, setCompletedWord] = useState<{word: string, translation: string, id: number} | null>(null);
   const [wordHistory, setWordHistory] = useState<number[]>([]);
-   // 每次进入计时模式组件，认为开始一局新游戏：重置本局得分 & 连击
-useEffect(() => {
-  startGame();
-}, [startGame]);
+  const [showStartModal, setShowStartModal] = useState(true);
+  const [isShattering, setIsShattering] = useState(false);
+
+  // 预先准备一局游戏，让第一个单词先加载出来
+  useEffect(() => {
+    startGame();
+  }, [startGame]);
+
+  // Restart game
+  const restartGame = useCallback(() => {
+    // 开始新的一局：重置本局得分和连击
+    startGame();
+    setTimeLeft(120);
+    setIsGameActive(true);
+    setWordsCompleted(0);
+    setShowGameOver(false);
+    setWordHistory([]);
+    resetStreak();
+  }, [resetStreak, startGame]);
+
   // Timer countdown
   useEffect(() => {
     if (!isGameActive || timeLeft <= 0) {
@@ -67,16 +83,14 @@ useEffect(() => {
     }
   }, [isGameActive]);
 
-  // Restart game
-  const restartGame = () => {
-      // 开始新的一局：重置本局得分和连击
-    startGame();
-    setTimeLeft(120);
-    setIsGameActive(true);
-    setWordsCompleted(0);
-    setShowGameOver(false);
-    setWordHistory([]); // Reset word history
-    resetStreak();
+  const handleStart = () => {
+    if (isShattering) return;
+    setIsShattering(true);
+    setTimeout(() => {
+      restartGame();
+      setShowStartModal(false);
+      setIsShattering(false);
+    }, 500);
   };
 
   // Format time display
@@ -145,14 +159,40 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* Game Area */}
-      {isGameActive && !showGameOver && (
+      {/* Game Area：始终渲染游戏界面，只在游戏结束时隐藏 */}
+      {!showGameOver && (
         <LetterGameWithCallback 
           mode="timed" 
           onWordComplete={handleWordComplete}
           showBuiltInFeedback={false}
           wordHistory={wordHistory}
         />
+      )}
+
+      {/* Start Game Modal - 毛玻璃 + 玻璃击碎效果 */}
+      {showStartModal && !showGameOver && (
+        <div
+          className={`fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/20 backdrop-blur-sm transition-opacity duration-500 ${
+            isShattering ? 'opacity-0' : 'opacity-100'
+          }`}
+        >
+          <div
+            className={`relative rounded-3xl p-8 max-w-md w-full text-center shadow-2xl border border-white/40 bg-white/20 backdrop-blur-xl transform transition-transform.duration-500 ${
+              isShattering ? 'scale-110' : 'scale-100'
+            }`}
+          >
+            <div className="text-6xl mb-4">⏱️</div>
+            <h2 className="text-3xl font-bold text-gray-100 mb-4">准备好了吗？</h2>
+            <p className="text-gray-200 mb-6">点击“开始”后，120 秒倒计时才会开始。</p>
+
+            <button
+              onClick={handleStart}
+              className="w-full bg-blue-500/80 text-white font-bold py-4 px-8 rounded-2xl text-lg hover:bg-blue-500 transition-all duration-200 transform hover:scale-105 shadow-lg"
+            >
+              ▶️ 开始
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Word Completion Feedback Popup */}

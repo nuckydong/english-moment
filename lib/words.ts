@@ -128,7 +128,7 @@ export const wordsDatabase: Word[] = [
   { id: 113, word: 'sister', translation: '姐妹', imageUrl: '👭', difficulty: 'hard', category: 'family' },
   { id: 114, word: 'brother', translation: '兄弟', imageUrl: '👬', difficulty: 'hard', category: 'family' },
   { id: 115, word: 'window', translation: '窗户', imageUrl: '🪟', difficulty: 'hard', category: 'classroom' },
-  { id: 116, word: 'blackboard', translation: '黑板', imageUrl: '📋', difficulty: 'hard', category: 'classroom' },
+  { id: 116, word: 'blackboard', translation: '黑板', imageUrl: '◼', difficulty: 'hard', category: 'classroom' },
   { id: 117, word: 'marker', translation: '马克笔', imageUrl: '🖍️', difficulty: 'hard', category: 'stationery' },
   { id: 118, word: 'crayon', translation: '蜡笔', imageUrl: '🖍️', difficulty: 'hard', category: 'stationery' },
   { id: 119, word: 'notebook', translation: '笔记本', imageUrl: '📓', difficulty: 'hard', category: 'stationery' },
