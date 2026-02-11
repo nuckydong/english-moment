@@ -16,7 +16,7 @@ export const wordsDatabase: Word[] = [
   { id: 5, word: 'cat', translation: '猫', imageUrl: '🐱', difficulty: 'easy', category: 'animals' },
   { id: 6, word: 'dog', translation: '狗', imageUrl: '🐶', difficulty: 'easy', category: 'animals' },
   { id: 7, word: 'sun', translation: '太阳', imageUrl: '☀️', difficulty: 'easy', category: 'nature' },
-  { id: 8, word: 'pen', translation: '钢笔', imageUrl: '🖊️', difficulty: 'easy', category: 'stationery' },
+  { id: 8, word: 'pen', translation: '笔，钢笔', imageUrl: '🖊️', difficulty: 'easy', category: 'stationery' },
   { id: 9, word: 'cup', translation: '杯子', imageUrl: '🥤', difficulty: 'easy', category: 'classroom' },
   { id: 10, word: 'bag', translation: '书包', imageUrl: '🎒', difficulty: 'easy', category: 'stationery' },
   { id: 11, word: 'hat', translation: '帽子', imageUrl: '🎩', difficulty: 'easy', category: 'classroom' },
