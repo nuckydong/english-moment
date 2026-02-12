@@ -5,6 +5,7 @@ import { useGameStore } from '@/store/gameStore';
 import MainMenu from '@/components/MainMenu';
 import TimedMode from '@/components/TimedMode';
 import LevelMode from '@/components/LevelMode';
+import MatchMode from '@/components/MatchMode';
 import Achievements from '@/components/Achievements';
 
 export default function Home() {
@@ -17,6 +18,7 @@ export default function Home() {
         <MainMenu onShowAchievements={() => setShowAchievements(true)} />
       )}
       {currentMode === 'timed' && <TimedMode />}
+      {currentMode === 'match' && <MatchMode />}
       {currentMode === 'level' && <LevelMode />}
       
       {showAchievements && (

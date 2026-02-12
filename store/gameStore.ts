@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type GameMode = 'menu' | 'timed' | 'level';
+export type GameMode = 'menu' | 'timed' | 'level' | 'match';
 export type Difficulty = 'easy' | 'medium' | 'hard';
 
 export interface Achievement {
