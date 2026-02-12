@@ -194,7 +194,7 @@ export default function MatchMode() {
                     : pastelClass
                 }`}
               >
-                {side === 'english' && (
+                {side === 'chinese' && (
                   <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/70 text-lg">
                     {word.imageUrl}
                   </span>
