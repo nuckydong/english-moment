@@ -92,7 +92,7 @@ export default function MainMenu({ onShowAchievements }: MainMenuProps) {
           onClick={() => setMode('match')}
           className="w-full bg-gradient-to-r from-green-400 to-emerald-400 text-white py-6 px-8 rounded-3xl font-bold text-2xl shadow-2xl hover:shadow-3xl transition-all hover:scale-105 btn-press"
         >
-          🧩 单词消消乐
+          🧩 单词连连看
           <p className="text-sm font-normal mt-1 opacity-90">配对英语和中文，配对成功就消失</p>
         </button>
 

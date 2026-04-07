@@ -139,7 +139,7 @@ export default function MatchMode() {
                 <span className="text-2xl">🏠</span>
               </button>
               <div>
-                <h1 className="text-3xl font-bold text-gray-800">🧩 单词消消乐</h1>
+                <h1 className="text-3xl font-bold text-gray-800">🧩 单词连连看</h1>
                 <div className="text-sm text-gray-500">
                   点击一个汉语，再点击对应的英文，配对正确就会消失
                 </div>

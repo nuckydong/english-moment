@@ -64,7 +64,6 @@ export const wordsDatabase: Word[] = [
   { id: 50, word: 'frog', translation: '青蛙', imageUrl: '🐸', difficulty: 'medium', category: 'animals' },
   { id: 51, word: 'rose', translation: '玫瑰', imageUrl: '🌹', difficulty: 'medium', category: 'nature' },
   { id: 52, word: 'kite', translation: '风筝', imageUrl: '🪁', difficulty: 'medium', category: 'classroom' },
-  { id: 53, word: 'rule', translation: '尺子', imageUrl: '📏', difficulty: 'medium', category: 'stationery' },
   { id: 54, word: 'blue', translation: '蓝色', imageUrl: '🔵', difficulty: 'medium', category: 'colors' },
   { id: 55, word: 'pink', translation: '粉色', imageUrl: '🩷', difficulty: 'medium', category: 'colors' },
   { id: 56, word: 'open', translation: '打开', imageUrl: '📖', difficulty: 'medium', category: 'classroom' },
@@ -97,6 +96,7 @@ export const wordsDatabase: Word[] = [
   { id: 81, word: 'table', translation: '桌子', imageUrl: '🪑', difficulty: 'hard', category: 'classroom' },
   { id: 82, word: 'paper', translation: '纸', imageUrl: '📄', difficulty: 'hard', category: 'stationery' },
   { id: 83, word: 'pencil', translation: '铅笔', imageUrl: '✏️', difficulty: 'hard', category: 'stationery' },
+  { id: 53, word: 'ruler', translation: '尺子，直尺', imageUrl: '📏', difficulty: 'medium', category: 'stationery' },
   { id: 84, word: 'eraser', translation: '橡皮', imageUrl: '🧽', difficulty: 'hard', category: 'stationery' },
   { id: 85, word: 'school', translation: '学校', imageUrl: '🏫', difficulty: 'hard', category: 'classroom' },
   { id: 86, word: 'teacher', translation: '老师', imageUrl: '👩‍🏫', difficulty: 'hard', category: 'classroom' },
@@ -265,6 +265,8 @@ wordsDatabase.forEach(word => {
     word.phonetic = wordPhonetics[key];
   }
 });
+
+
 
 // Utility function to shuffle array
 export function shuffleArray<T>(array: T[]): T[] {
