@@ -54,12 +54,12 @@ export default function WordList({ onClose }: WordListProps) {
                   </div>
                 )}
 
-                <div className="mt-2 flex items-center rounded-3xl bg-white/90 px-3 py-2 shadow-sm md:mt-3 md:px-4 md:py-3">
+                <div className="mt-2 rounded-3xl bg-white/90 px-3 py-2 shadow-sm md:mt-3 md:px-4 md:py-3">
                   <div className="flex items-center gap-3 md:gap-4">
                     <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-purple-50 text-2xl md:h-12 md:w-12 md:text-3xl">
                       {word.imageUrl}
                     </div>
-                    <div className="flex items-center gap-3 md:gap-4 overflow-x-auto whitespace-nowrap">
+                    <div className="flex items-center gap-3 overflow-x-auto whitespace-nowrap md:gap-4">
                       <div className="text-base font-bold text-gray-800 md:text-lg">
                         {word.word}
                       </div>
@@ -85,6 +85,38 @@ export default function WordList({ onClose }: WordListProps) {
                       </button>
                     </div>
                   </div>
+
+                  {word.examples && word.examples.length > 0 && (
+                    <div className="mt-3 space-y-2 pl-1 md:pl-2">
+                      {word.examples.map((example, idx) => (
+                        <div
+                          key={`${word.id}-example-${idx}`}
+                          className="rounded-2xl bg-purple-50/70 px-3 py-2"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="text-sm font-medium text-gray-700 md:text-base">
+                              {example.en}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                speakWord(example.en);
+                              }}
+                              className="inline-flex items-center justify-center rounded-xl bg-blue-50 px-2 py-1 text-sm text-blue-600 hover:bg-blue-100"
+                              aria-label="朗读例句"
+                            >
+                              🔊
+                            </button>
+                          </div>
+                          <div className="mt-1 text-xs text-gray-500 md:text-sm">
+                            {example.zh}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             );

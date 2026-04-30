@@ -6,6 +6,12 @@ export interface Word {
   difficulty: 'easy' | 'medium' | 'hard';
   category: 'animals' | 'greetings' | 'classroom' | 'stationery' | 'family' | 'colors' | 'numbers' | 'food' | 'nature' | 'body';
   phonetic?: string;
+  examples?: ExampleSentence[];
+}
+
+export interface ExampleSentence {
+  en: string;
+  zh: string;
 }
 
 export const wordsDatabase: Word[] = [
@@ -189,7 +195,7 @@ export const wordPhonetics: Record<string, string> = {
   frog: '/frɒɡ/',
   rose: '/rəʊz/',
   kite: '/kaɪt/',
-  rule: '/ruːl/',
+  ruler: '/ˈruːlər/',
   blue: '/bluː/',
   pink: '/pɪŋk/',
   open: '/ˈəʊpən/',
@@ -259,11 +265,209 @@ export const wordPhonetics: Record<string, string> = {
   scissors: '/ˈsɪzərz/',
 };
 
+const specialExamples: Record<string, ExampleSentence[]> = {
+  hi: [
+    { en: 'Hi, I am Tom.', zh: '嗨，我是汤姆。' },
+    { en: 'Hi, my friend!', zh: '嗨，我的朋友！' },
+  ],
+  bye: [
+    { en: 'Bye, see you tomorrow.', zh: '再见，明天见。' },
+    { en: 'Say bye to the teacher.', zh: '跟老师说再见。' },
+  ],
+  yes: [
+    { en: 'Yes, I can do it.', zh: '是的，我能做到。' },
+    { en: 'Yes, this is my book.', zh: '是的，这是我的书。' },
+  ],
+  no: [
+    { en: 'No, thank you.', zh: '不，谢谢。' },
+    { en: 'No, it is not mine.', zh: '不，这不是我的。' },
+  ],
+  please: [
+    { en: 'Please open the door.', zh: '请把门打开。' },
+    { en: 'Please help me.', zh: '请帮助我。' },
+  ],
+  thank: [
+    { en: 'Thank you, teacher.', zh: '谢谢你，老师。' },
+    { en: 'Thank you very much.', zh: '非常感谢你。' },
+  ],
+  sorry: [
+    { en: 'Sorry, I am late.', zh: '对不起，我迟到了。' },
+    { en: 'Sorry, I made a mistake.', zh: '对不起，我犯了个错。' },
+  ],
+  run: [
+    { en: 'I can run fast.', zh: '我可以跑得很快。' },
+    { en: 'Run to the playground.', zh: '跑到操场去。' },
+  ],
+  sit: [
+    { en: 'Please sit here.', zh: '请坐这里。' },
+    { en: 'Sit down, please.', zh: '请坐下。' },
+  ],
+  eat: [
+    { en: 'I eat an apple.', zh: '我吃一个苹果。' },
+    { en: 'We eat bread at school.', zh: '我们在学校吃面包。' },
+  ],
+  open: [
+    { en: 'Open your book, please.', zh: '请打开你的书。' },
+    { en: 'Open the window.', zh: '打开窗户。' },
+  ],
+  shut: [
+    { en: 'Shut the door, please.', zh: '请把门关上。' },
+    { en: 'Shut your eyes.', zh: '闭上你的眼睛。' },
+  ],
+  come: [
+    { en: 'Come here, please.', zh: '请到这里来。' },
+    { en: 'Come to my home.', zh: '来我家吧。' },
+  ],
+  look: [
+    { en: 'Look at the bird.', zh: '看那只鸟。' },
+    { en: 'Look at me.', zh: '看我。' },
+  ],
+  read: [
+    { en: 'I read a book.', zh: '我读一本书。' },
+    { en: 'Read this word.', zh: '读这个单词。' },
+  ],
+  draw: [
+    { en: 'I draw a flower.', zh: '我画一朵花。' },
+    { en: 'Draw a big sun.', zh: '画一个大太阳。' },
+  ],
+  write: [
+    { en: 'Write your name.', zh: '写下你的名字。' },
+    { en: 'I write with a pencil.', zh: '我用铅笔写字。' },
+  ],
+  listen: [
+    { en: 'Listen to the teacher.', zh: '听老师讲。' },
+    { en: 'Listen and repeat.', zh: '听并跟读。' },
+  ],
+};
+
+const colorWords = new Set(['red', 'blue', 'pink', 'yellow', 'green', 'orange', 'purple', 'black', 'white']);
+const numberWords = new Set(['one', 'two', 'three', 'four', 'five', 'seven', 'eight', 'nine']);
+const adjectiveWords = new Set(['big', 'nice', 'good', 'happy']);
+const adverbWords = new Set(['here', 'today']);
+const timeWords = new Set(['morning']);
+const massNounWords = new Set(['water', 'milk', 'bread']);
+const pluralNounWords = new Set(['scissors']);
+const peopleWords = new Set(['teacher', 'student', 'friend']);
+
+function buildExampleSentences(word: Word): ExampleSentence[] {
+  const key = word.word.toLowerCase();
+  const shortZh = word.translation.split(/[，,]/)[0];
+  const article = /^[aeiou]/i.test(key) ? 'an' : 'a';
+
+  if (specialExamples[key]) {
+    return specialExamples[key];
+  }
+
+  if (colorWords.has(key)) {
+    return [
+      { en: `This is ${key}.`, zh: `这是${shortZh}。` },
+      { en: `I like ${key}.`, zh: `我喜欢${shortZh}。` },
+    ];
+  }
+
+  if (key === 'color') {
+    return [
+      { en: 'This is a color.', zh: '这是一种颜色。' },
+      { en: 'I like this color.', zh: '我喜欢这个颜色。' },
+    ];
+  }
+
+  if (numberWords.has(key)) {
+    return [
+      { en: `I can count ${key}.`, zh: `我会数到${shortZh}。` },
+      { en: `Show me ${key} fingers.`, zh: `给我看${shortZh}根手指。` },
+    ];
+  }
+
+  if (adjectiveWords.has(key)) {
+    return [
+      { en: `It is ${key}.`, zh: `它是${shortZh}的。` },
+      { en: `This is very ${key}.`, zh: `这个非常${shortZh}。` },
+    ];
+  }
+
+  if (adverbWords.has(key)) {
+    return [
+      { en: `Come ${key}, please.`, zh: `请到${shortZh}来。` },
+      { en: `I am ${key}.`, zh: `我在${shortZh}。` },
+    ];
+  }
+
+  if (timeWords.has(key)) {
+    return [
+      { en: `Good ${key}!`, zh: `${shortZh}好！` },
+      { en: `I read in the ${key}.`, zh: `我在${shortZh}读书。` },
+    ];
+  }
+
+  if (pluralNounWords.has(key)) {
+    return [
+      { en: `These are ${key}.`, zh: `这些是${shortZh}。` },
+      { en: `I use ${key}.`, zh: `我用${shortZh}。` },
+    ];
+  }
+
+  if (massNounWords.has(key)) {
+    return [
+      { en: `This is some ${key}.`, zh: `这是一些${shortZh}。` },
+      { en: `I like ${key}.`, zh: `我喜欢${shortZh}。` },
+    ];
+  }
+
+  if (word.category === 'family') {
+    return [
+      { en: `This is my ${key}.`, zh: `这是我的${shortZh}。` },
+      { en: `I love my ${key}.`, zh: `我爱我的${shortZh}。` },
+    ];
+  }
+
+  if (peopleWords.has(key)) {
+    return [
+      { en: `This is my ${key}.`, zh: `这是我的${shortZh}。` },
+      { en: `I like my ${key}.`, zh: `我喜欢我的${shortZh}。` },
+    ];
+  }
+
+  if (word.category === 'body') {
+    return [
+      { en: `This is my ${key}.`, zh: `这是我的${shortZh}。` },
+      { en: `I have two ${key}s.`, zh: `我有两个${shortZh}。` },
+    ];
+  }
+
+  if (word.category === 'stationery') {
+    return [
+      { en: `This is ${article} ${key}.`, zh: `这是一个${shortZh}。` },
+      { en: `I use ${article} ${key}.`, zh: `我使用这个${shortZh}。` },
+    ];
+  }
+
+  if (word.category === 'animals' || word.category === 'nature') {
+    return [
+      { en: `This is ${article} ${key}.`, zh: `这是一个${shortZh}。` },
+      { en: `I see ${article} ${key}.`, zh: `我看见一个${shortZh}。` },
+    ];
+  }
+
+  if (word.category === 'classroom') {
+    return [
+      { en: `This is ${article} ${key}.`, zh: `这是一个${shortZh}。` },
+      { en: `It is in the classroom.`, zh: `它在教室里。` },
+    ];
+  }
+
+  return [
+    { en: `This is ${article} ${key}.`, zh: `这是一个${shortZh}。` },
+    { en: `I like the ${key}.`, zh: `我喜欢这个${shortZh}。` },
+  ];
+}
+
 wordsDatabase.forEach(word => {
   const key = word.word.toLowerCase();
   if (wordPhonetics[key]) {
     word.phonetic = wordPhonetics[key];
   }
+  word.examples = buildExampleSentences(word);
 });
 
 
