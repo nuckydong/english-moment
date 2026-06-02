@@ -26,6 +26,8 @@ async function getBaiduAccessToken(): Promise<string> {
   const secretKey = process.env.BAIDU_SECRET_KEY;
 
   if (!apiKey || !secretKey) {
+    console.error('BAIDU_API_KEY:', apiKey ? '已设置' : '未设置');
+    console.error('BAIDU_SECRET_KEY:', secretKey ? '已设置' : '未设置');
     throw new Error('Baidu API credentials not configured');
   }
 

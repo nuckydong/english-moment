@@ -34,5 +34,10 @@ COPY --from=builder /app/public ./public
 
 # Next.js 默认端口
 EXPOSE 3000
+
+# 通过 ARG 声明可传入的环境变量（docker run -e 或 docker-compose environment 覆盖）
+ARG BAIDU_API_KEY
+ARG BAIDU_SECRET_KEY
+
 # 以 Next.js 生产模式启动
 CMD ["npm", "run", "start"]
