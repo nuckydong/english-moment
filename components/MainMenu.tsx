@@ -22,7 +22,7 @@ export default function MainMenu({ onShowAchievements }: MainMenuProps) {
           🎮 英语拼词
         </h1>
         <p className="text-2xl md:text-3xl text-gray-700 font-semibold">
-          入门版（逐步增加词汇）
+          少儿学英语，拼写单词，提高英语水平。
         </p>
       </div>
 
