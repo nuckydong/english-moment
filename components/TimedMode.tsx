@@ -1,60 +1,61 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import LetterGameWithCallback from './LetterGameWithCallback';
+import type { WordCompleteData } from '@/types';
+
+const GAME_DURATION = 120;
 
 export default function TimedMode() {
-const {
-  difficulty,
-  resetStreak,
-  score,
-  streak,
-  setMode,
-  startGame,
-} = useGameStore();
-  
-  const [timeLeft, setTimeLeft] = useState(120);
+  const difficulty = useGameStore((s) => s.difficulty);
+  const resetStreak = useGameStore((s) => s.resetStreak);
+  const score = useGameStore((s) => s.score);
+  const streak = useGameStore((s) => s.streak);
+  const setMode = useGameStore((s) => s.setMode);
+  const startGame = useGameStore((s) => s.startGame);
+  const endGame = useGameStore((s) => s.endGame);
+  const checkSpeedMaster = useGameStore((s) => s.checkSpeedMaster);
+  const incrementCorrect = useGameStore((s) => s.incrementCorrect);
+
+  const [timeLeft, setTimeLeft] = useState(GAME_DURATION);
   const [isGameActive, setIsGameActive] = useState(false);
   const [wordsCompleted, setWordsCompleted] = useState(0);
   const [showGameOver, setShowGameOver] = useState(false);
-  const [completedWord, setCompletedWord] = useState<{word: string, translation: string, id: number} | null>(null);
+  const [completedWord, setCompletedWord] = useState<WordCompleteData | null>(null);
   const [wordHistory, setWordHistory] = useState<number[]>([]);
   const [showStartModal, setShowStartModal] = useState(true);
   const [isShattering, setIsShattering] = useState(false);
 
-  // 预先准备一局游戏，让第一个单词先加载出来
+  // 追踪 60 秒窗口内答对的单词数（用于 speed_master 成就）
+  const correctTimestampsRef = useRef<number[]>([]);
+
   useEffect(() => {
     startGame();
   }, [startGame]);
 
-  // Restart game
   const restartGame = useCallback(() => {
-    // 开始新的一局：重置本局得分和连击
     startGame();
-    setTimeLeft(120);
+    setTimeLeft(GAME_DURATION);
     setIsGameActive(true);
     setWordsCompleted(0);
     setShowGameOver(false);
     setWordHistory([]);
     resetStreak();
+    correctTimestampsRef.current = [];
   }, [resetStreak, startGame]);
 
-  // Timer countdown
+  // Timer countdown - 只依赖 isGameActive，避免每秒重建 interval
   useEffect(() => {
-    if (!isGameActive || timeLeft <= 0) {
-      if (timeLeft <= 0 && isGameActive) {
-        setIsGameActive(false);
-        setShowGameOver(true);
-      }
-      return;
-    }
+    if (!isGameActive) return;
 
     const timer = setInterval(() => {
-      setTimeLeft(prev => {
+      setTimeLeft((prev) => {
         if (prev <= 1) {
+          clearInterval(timer);
           setIsGameActive(false);
           setShowGameOver(true);
+          endGame();
           return 0;
         }
         return prev - 1;
@@ -62,26 +63,30 @@ const {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isGameActive, timeLeft]);
+  }, [isGameActive, endGame]);
 
-  // Handle word completion
-  const handleWordComplete = useCallback((word?: {word: string, translation: string, id: number}) => {
+  const handleWordComplete = useCallback((word?: WordCompleteData) => {
     if (isGameActive && word) {
       setWordsCompleted(prev => prev + 1);
       setCompletedWord(word);
-      
-      // Update word history (keep last 5)
+      incrementCorrect();
+
+      // 追踪 60 秒窗口内答对数
+      const now = Date.now();
+      correctTimestampsRef.current.push(now);
+      correctTimestampsRef.current = correctTimestampsRef.current.filter(
+        ts => now - ts < 60_000
+      );
+      checkSpeedMaster(correctTimestampsRef.current.length);
+
       setWordHistory(prev => {
         const newHistory = [...prev, word.id];
-        return newHistory.slice(-5); // Keep only last 5
+        return newHistory.slice(-5);
       });
-      
-      // Auto-hide after 1.5 seconds
-      setTimeout(() => {
-        setCompletedWord(null);
-      }, 1500);
+
+      setTimeout(() => setCompletedWord(null), 1500);
     }
-  }, [isGameActive]);
+  }, [isGameActive, incrementCorrect, checkSpeedMaster]);
 
   const handleStart = () => {
     if (isShattering) return;
@@ -93,7 +98,6 @@ const {
     }, 500);
   };
 
-  // Format time display
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -110,7 +114,7 @@ const {
               <button
                 onClick={() => setMode('menu')}
                 className="flex items-center justify-center w-12 h-12 bg-gray-100 hover:bg-gray-200 rounded-xl shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95"
-                title="返回主页"
+                aria-label="返回主页"
               >
                 <span className="text-2xl">🏠</span>
               </button>
@@ -123,34 +127,36 @@ const {
               </div>
             </div>
           </div>
-          
+
           {/* Stats Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {/* Timer */}
+            {/* Timer with aria-live */}
             <div className={`rounded-2xl p-4 text-center ${
               timeLeft <= 10 ? 'bg-red-100' : timeLeft <= 30 ? 'bg-yellow-100' : 'bg-green-100'
             }`}>
-              <div className={`text-3xl font-bold ${
-                timeLeft <= 10 ? 'text-red-600' : timeLeft <= 30 ? 'text-yellow-600' : 'text-green-600'
-              }`}>
+              <div
+                className={`text-3xl font-bold ${
+                  timeLeft <= 10 ? 'text-red-600' : timeLeft <= 30 ? 'text-yellow-600' : 'text-green-600'
+                }`}
+                role="timer"
+                aria-live={timeLeft <= 10 ? 'assertive' : 'polite'}
+                aria-label={`剩余时间 ${Math.floor(timeLeft / 60)} 分 ${timeLeft % 60} 秒`}
+              >
                 {formatTime(timeLeft)}
               </div>
               <div className="text-sm text-gray-700">剩余时间</div>
             </div>
-            
-            {/* Words Completed */}
+
             <div className="bg-blue-100 rounded-2xl p-4 text-center">
               <div className="text-3xl font-bold text-blue-600">{wordsCompleted}</div>
               <div className="text-sm text-gray-700">完成单词</div>
             </div>
-            
-            {/* Current Score */}
+
             <div className="bg-purple-100 rounded-2xl p-4 text-center">
               <div className="text-3xl font-bold text-purple-600">{score}</div>
               <div className="text-sm text-gray-700">当前得分</div>
             </div>
-            
-            {/* Streak */}
+
             <div className="bg-orange-100 rounded-2xl p-4 text-center">
               <div className="text-3xl font-bold text-orange-600">{streak}</div>
               <div className="text-sm text-gray-700">连续正确</div>
@@ -159,31 +165,34 @@ const {
         </div>
       </div>
 
-      {/* Game Area：始终渲染游戏界面，只在游戏结束时隐藏 */}
+      {/* Game Area */}
       {!showGameOver && (
-        <LetterGameWithCallback 
-          mode="timed" 
+        <LetterGameWithCallback
+          mode="timed"
           onWordComplete={handleWordComplete}
           showBuiltInFeedback={false}
           wordHistory={wordHistory}
         />
       )}
 
-      {/* Start Game Modal - 毛玻璃 + 玻璃击碎效果 */}
+      {/* Start Game Modal */}
       {showStartModal && !showGameOver && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="start-modal-title"
           className={`fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/20 backdrop-blur-sm transition-opacity duration-500 ${
             isShattering ? 'opacity-0' : 'opacity-100'
           }`}
         >
           <div
-            className={`relative rounded-3xl p-8 max-w-md w-full text-center shadow-2xl border border-white/40 bg-white/20 backdrop-blur-xl transform transition-transform.duration-500 ${
+            className={`relative rounded-3xl p-8 max-w-md w-full text-center shadow-2xl border border-white/40 bg-white/20 backdrop-blur-xl transform transition-transform duration-500 ${
               isShattering ? 'scale-110' : 'scale-100'
             }`}
           >
             <div className="text-6xl mb-4">⏱️</div>
-            <h2 className="text-3xl font-bold text-gray-100 mb-4">准备好了吗？</h2>
-            <p className="text-gray-200 mb-6">点击“开始”后，120 秒倒计时才会开始。</p>
+            <h2 id="start-modal-title" className="text-3xl font-bold text-gray-100 mb-4">准备好了吗？</h2>
+            <p className="text-gray-200 mb-6">点击"开始"后，120 秒倒计时才会开始。</p>
 
             <button
               onClick={handleStart}
@@ -227,22 +236,27 @@ const {
 
       {/* Game Over Modal */}
       {showGameOver && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="gameover-title"
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+        >
           <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center shadow-2xl">
             <div className="text-8xl mb-4">⏰</div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">时间到！</h2>
-            
+            <h2 id="gameover-title" className="text-3xl font-bold text-gray-800 mb-4">时间到！</h2>
+
             <div className="space-y-4 mb-6">
               <div className="bg-blue-100 rounded-2xl p-4">
                 <div className="text-2xl font-bold text-blue-600">{wordsCompleted}</div>
                 <div className="text-sm text-gray-700">完成单词</div>
               </div>
-              
+
               <div className="bg-purple-100 rounded-2xl p-4">
                 <div className="text-2xl font-bold text-purple-600">{score}</div>
                 <div className="text-sm text-gray-700">总得分</div>
               </div>
-              
+
               <div className="bg-orange-100 rounded-2xl p-4">
                 <div className="text-2xl font-bold text-orange-600">{streak}</div>
                 <div className="text-sm text-gray-700">最高连击</div>
@@ -256,10 +270,10 @@ const {
               >
                 🔄 再玩一次
               </button>
-              
+
               <button
                 onClick={() => {
-                  setTimeLeft(120);
+                  setTimeLeft(GAME_DURATION);
                   setIsGameActive(false);
                   setWordsCompleted(0);
                   setShowGameOver(false);

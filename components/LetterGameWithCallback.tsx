@@ -4,12 +4,13 @@ import { useState, useEffect, useCallback, forwardRef, useImperativeHandle, useR
 import { useGameStore } from '@/store/gameStore';
 import { getRandomWord, scrambleWord, type Word } from '@/lib/words';
 import { speakWord, stopSpeaking } from '@/lib/speech';
+import type { WordCompleteData } from '@/types';
 
 interface LetterGameWithCallbackProps {
   mode: 'timed' | 'level';
-  onWordComplete?: (word?: {word: string, translation: string, id: number}) => void; // Called when a word is completed correctly
-  showBuiltInFeedback?: boolean; // Control whether to show the built-in success/failure modal (default: true)
-  wordHistory?: number[]; // Track recently used word IDs to avoid repetition
+  onWordComplete?: (word?: WordCompleteData) => void;
+  showBuiltInFeedback?: boolean;
+  wordHistory?: number[];
 }
 
 export interface LetterGameRef {
@@ -17,30 +18,29 @@ export interface LetterGameRef {
 }
 
 const LetterGameWithCallback = forwardRef<LetterGameRef, LetterGameWithCallbackProps>(({ mode, onWordComplete, showBuiltInFeedback = true, wordHistory = [] }, ref) => {
-  const { difficulty, addScore, incrementStreak, resetStreak } = useGameStore();
+  const difficulty = useGameStore((s) => s.difficulty);
+  const addScore = useGameStore((s) => s.addScore);
+  const incrementStreak = useGameStore((s) => s.incrementStreak);
+  const resetStreak = useGameStore((s) => s.resetStreak);
   const [currentWord, setCurrentWord] = useState<Word | null>(null);
   const [scrambledLetters, setScrambledLetters] = useState<string[]>([]);
   const [selectedLetters, setSelectedLetters] = useState<string[]>([]);
   const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
   const [showFeedback, setShowFeedback] = useState<'correct' | 'wrong' | null>(null);
   const [isComplete, setIsComplete] = useState(false);
-  
-  // Use ref to access latest wordHistory without triggering re-initialization
+
   const wordHistoryRef = useRef<number[]>(wordHistory);
   useEffect(() => {
     wordHistoryRef.current = wordHistory;
   }, [wordHistory]);
-  
-  // Track if component has been initialized
+
   const isInitializedRef = useRef(false);
-  
-  // Use ref for onWordComplete to avoid infinite loops
+
   const onWordCompleteRef = useRef(onWordComplete);
   useEffect(() => {
     onWordCompleteRef.current = onWordComplete;
   }, [onWordComplete]);
-  
-  // Use refs for Zustand store functions to avoid infinite loops
+
   const addScoreRef = useRef(addScore);
   const incrementStreakRef = useRef(incrementStreak);
   const resetStreakRef = useRef(resetStreak);
@@ -50,11 +50,8 @@ const LetterGameWithCallback = forwardRef<LetterGameRef, LetterGameWithCallbackP
     resetStreakRef.current = resetStreak;
   }, [addScore, incrementStreak, resetStreak]);
 
-  // Initialize new word
   const initializeWord = useCallback(() => {
-    // 停止当前正在播放的语音（如果有）
     stopSpeaking();
-    
     const word = getRandomWord(difficulty, wordHistoryRef.current);
     setCurrentWord(word);
     const scrambled = scrambleWord(word.word);
@@ -64,46 +61,34 @@ const LetterGameWithCallback = forwardRef<LetterGameRef, LetterGameWithCallbackP
     setShowFeedback(null);
     setIsComplete(false);
   }, [difficulty]);
-  
-  // Expose methods to parent component
+
   useImperativeHandle(ref, () => ({
     initializeWord
   }), [initializeWord]);
 
-  // Initialize first word once (avoid hydration mismatch and infinite loops)
   useEffect(() => {
     if (!isInitializedRef.current) {
-      // Delay initialization until after hydration
       const timer = setTimeout(() => {
         initializeWord();
         isInitializedRef.current = true;
       }, 0);
       return () => clearTimeout(timer);
     }
-  }, []); // Empty deps - only run once on mount
+  }, []);
 
-  // Handle letter selection
   const handleLetterSelect = (letter: string, index: number) => {
     if (isComplete) return;
-
-    // 标记这个备选下标已被使用
     setSelectedIndices(prev => (prev.includes(index) ? prev : [...prev, index]));
-    // 记录被选中的字母，用于上方显示
     setSelectedLetters(prev => [...prev, letter]);
   };
 
-  // Handle letter removal (click selected letter to remove)
   const handleLetterRemove = (index: number) => {
     if (isComplete) return;
-
-    // 从已选字母列表中移除对应位置
     setSelectedLetters(prev => {
       const next = [...prev];
       next.splice(index, 1);
       return next;
     });
-
-    // 同步移除对应的备选下标，恢复下面的按钮可用
     setSelectedIndices(prev => {
       const next = [...prev];
       next.splice(index, 1);
@@ -111,61 +96,40 @@ const LetterGameWithCallback = forwardRef<LetterGameRef, LetterGameWithCallbackP
     });
   };
 
-  // Check answer when all letters are selected
   useEffect(() => {
     if (selectedLetters.length === currentWord?.word.length && currentWord && !isComplete) {
       const userAnswer = selectedLetters.join('').toLowerCase();
       const correctAnswer = currentWord.word.toLowerCase();
-      
+
       if (userAnswer === correctAnswer) {
         if (showBuiltInFeedback) {
           setShowFeedback('correct');
         }
         setIsComplete(true);
-        
-        // Calculate score based on difficulty
+
         const points = difficulty === 'easy' ? 10 : difficulty === 'medium' ? 20 : 30;
         addScoreRef.current(points);
         incrementStreakRef.current();
-        
-        // Play success sound
-        // Show success message
-        const successMessage = '你真棒';
-        
-        // Notify parent component of word completion
-        if (onWordCompleteRef.current) {
-          onWordCompleteRef.current(currentWord ? {word: currentWord.word, translation: currentWord.translation, id: currentWord.id} : undefined);
-        }
-        
-        // 🔊 朗读正确的英语单词，等待发音完成后再自动跳转
-        // Auto-advance to next word after audio completes (only for timed mode)
+
+        onWordCompleteRef.current?.({ word: currentWord.word, translation: currentWord.translation, id: currentWord.id });
+
         if (mode === 'timed') {
           speakWord(currentWord.word, {
-            rate: 0.7,  // 稍慢语速，便于学习
-            pitch: 1.1, // 稍高音调，更清晰
-            volume: 0.9, // 较大音量
             onEnd: () => {
-              // 延迟初始化新单词，避免与当前 useEffect 冲突
               setTimeout(() => {
                 initializeWord();
               }, 100);
             }
           });
         } else {
-          // 关卡模式：只播放语音，不自动跳转
-          speakWord(currentWord.word, {
-            rate: 0.7,
-            pitch: 1.1,
-            volume: 0.9
-          });
+          speakWord(currentWord.word);
         }
       } else {
         if (showBuiltInFeedback) {
           setShowFeedback('wrong');
         }
         resetStreakRef.current();
-        
-        // Reset after delay
+
         setTimeout(() => {
           setSelectedLetters([]);
           setSelectedIndices([]);
@@ -173,9 +137,8 @@ const LetterGameWithCallback = forwardRef<LetterGameRef, LetterGameWithCallbackP
         }, 1000);
       }
     }
-  }, [selectedLetters, currentWord, difficulty, scrambledLetters, mode, showBuiltInFeedback, isComplete]);
+  }, [selectedLetters, currentWord, difficulty, mode, showBuiltInFeedback, isComplete, initializeWord]);
 
-  // Clear all selected letters
   const handleClear = () => {
     if (isComplete) return;
     setSelectedLetters([]);
@@ -196,16 +159,13 @@ const LetterGameWithCallback = forwardRef<LetterGameRef, LetterGameWithCallbackP
         {/* Word Display */}
         <div className="text-center mb-4">
           <div className="bg-white rounded-3xl shadow-xl p-4 mb-4">
-            <div className="text-6xl mb-2">{currentWord.imageUrl}</div>
+            <div className="text-6xl mb-2" aria-hidden="true">{currentWord.imageUrl}</div>
             <div className="text-xl font-bold text-gray-800 mb-2">{currentWord.translation}</div>
             <button
               type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                speakWord(currentWord.word);
-              }}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); speakWord(currentWord.word); }}
               className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-100 mb-2 cursor-pointer transition-all duration-200 bg-blue-50 px-4 py-2 rounded-xl border-2 border-blue-200 hover:border-blue-400 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+              aria-label={`朗读单词 ${currentWord.word}`}
             >
               🔊 听发音
             </button>
@@ -221,24 +181,25 @@ const LetterGameWithCallback = forwardRef<LetterGameRef, LetterGameWithCallbackP
           <div className="text-center mb-2">
             <h3 className="text-lg font-bold text-gray-800">拼出单词：</h3>
           </div>
-          
-          <div className="flex flex-wrap justify-center gap-2 min-h-[60px] items-center p-3 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-300">
+
+          <div className="flex flex-wrap justify-center gap-2 min-h-[60px] items-center p-3 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-300" role="group" aria-label="已选字母区域">
             {selectedLetters.map((letter, index) => (
               <button
                 key={`selected-${index}`}
                 onClick={() => handleLetterRemove(index)}
                 className="w-12 h-12 bg-blue-500 text-white text-xl font-bold rounded-xl shadow-lg transform transition-all duration-200 hover:scale-110 hover:bg-blue-600 active:scale-95"
                 disabled={isComplete}
+                aria-label={`移除字母 ${letter.toLowerCase()}`}
               >
                 {letter.toLowerCase()}
               </button>
             ))}
-            
-            {/* Empty slots */}
+
             {Array.from({ length: currentWord.word.length - selectedLetters.length }).map((_, index) => (
               <div
                 key={`empty-${index}`}
                 className="w-12 h-12 bg-gray-200 rounded-xl border-2 border-dashed border-gray-400 flex items-center justify-center"
+                aria-hidden="true"
               >
                 <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
               </div>
@@ -251,8 +212,8 @@ const LetterGameWithCallback = forwardRef<LetterGameRef, LetterGameWithCallbackP
           <div className="text-center mb-2">
             <h3 className="text-lg font-bold text-gray-800">选择字母：</h3>
           </div>
-          
-          <div className="flex flex-wrap justify-center gap-2">
+
+          <div className="flex flex-wrap justify-center gap-2" role="group" aria-label="可选字母">
             {scrambledLetters.map((letter, index) => {
               const isUsed = selectedIndices.includes(index);
               return (
@@ -265,6 +226,7 @@ const LetterGameWithCallback = forwardRef<LetterGameRef, LetterGameWithCallbackP
                       : 'bg-green-500 text-white hover:scale-110 hover:bg-green-600 active:scale-95'
                   }`}
                   disabled={isComplete || isUsed}
+                  aria-label={`选择字母 ${letter.toLowerCase()}`}
                 >
                   {letter.toLowerCase()}
                 </button>
@@ -282,7 +244,7 @@ const LetterGameWithCallback = forwardRef<LetterGameRef, LetterGameWithCallbackP
           >
             🔄 重新开始
           </button>
-          
+
           <button
             onClick={initializeWord}
             className="px-6 py-3 bg-purple-500 text-white font-bold rounded-2xl shadow-lg transform transition-all duration-200 hover:scale-105 hover:bg-purple-600 active:scale-95 text-sm"
@@ -293,7 +255,12 @@ const LetterGameWithCallback = forwardRef<LetterGameRef, LetterGameWithCallbackP
 
         {/* Feedback Display */}
         {showFeedback && (
-          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="feedback-title"
+            className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50"
+          >
             <div className={`bg-gradient-to-br from-yellow-50 via-pink-50 to-blue-50 rounded-3xl p-8 text-center shadow-2xl transform transition-all duration-300 ${
               showFeedback === 'correct' ? 'scale-100' : 'scale-110'
             }`}>
@@ -305,7 +272,7 @@ const LetterGameWithCallback = forwardRef<LetterGameRef, LetterGameWithCallbackP
                     <div className="absolute -top-6 -right-4 text-3xl animate-pulse">🌟</div>
                     <div className="absolute -bottom-4 left-0 text-3xl animate-pulse">✨</div>
                   </div>
-                  <div className="text-3xl font-extrabold text-green-500 mb-2 tracking-widest">太棒啦！</div>
+                  <div id="feedback-title" className="text-3xl font-extrabold text-green-500 mb-2 tracking-widest">太棒啦！</div>
                   <div className="text-lg text-gray-600 mb-4">你拼对了这个单词</div>
                   <div className="bg-gradient-to-r from-yellow-100 via-pink-100 to-blue-100 rounded-3xl p-4 mb-4 shadow-inner w-full max-w-md">
                     <div className="text-4xl font-extrabold text-blue-600 mb-2 tracking-wider">{currentWord.word}</div>
@@ -322,7 +289,7 @@ const LetterGameWithCallback = forwardRef<LetterGameRef, LetterGameWithCallbackP
               ) : (
                 <div>
                   <div className="text-8xl mb-4">😅</div>
-                  <div className="text-3xl font-bold text-red-600 mb-2">再试试！</div>
+                  <div id="feedback-title" className="text-3xl font-bold text-red-600 mb-2">再试试！</div>
                   <div className="text-xl text-gray-700">重新排列字母</div>
                 </div>
               )}

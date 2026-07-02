@@ -2,17 +2,21 @@
 
 import { useState } from 'react';
 import { useGameStore } from '@/store/gameStore';
-import WordList from './WordList';
+import dynamic from 'next/dynamic';
+
+const WordList = dynamic(() => import('./WordList'));
 
 interface MainMenuProps {
   onShowAchievements: () => void;
 }
 
 export default function MainMenu({ onShowAchievements }: MainMenuProps) {
-  const { setMode, difficulty, setDifficulty, highScore, achievements } = useGameStore();
+  const setMode = useGameStore((s) => s.setMode);
+  const difficulty = useGameStore((s) => s.difficulty);
+  const setDifficulty = useGameStore((s) => s.setDifficulty);
+  const highScore = useGameStore((s) => s.highScore);
+  const unlockedCount = useGameStore((s) => s.achievements.filter(a => a.unlocked).length);
   const [showWordList, setShowWordList] = useState(false);
-
-  const unlockedAchievements = achievements.filter(a => a.unlocked).length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-200 via-purple-200 to-blue-200 flex flex-col items-center justify-center p-4">
@@ -35,7 +39,7 @@ export default function MainMenu({ onShowAchievements }: MainMenuProps) {
           </div>
           <div className="border-l-2 border-gray-200"></div>
           <div>
-            <div className="text-3xl font-bold text-accent">{unlockedAchievements}</div>
+            <div className="text-3xl font-bold text-accent">{unlockedCount}</div>
             <div className="text-sm text-gray-600">成就</div>
           </div>
         </div>
@@ -44,8 +48,10 @@ export default function MainMenu({ onShowAchievements }: MainMenuProps) {
       {/* Difficulty Selection */}
       <div className="bg-white rounded-3xl shadow-2xl p-6 mb-8 w-full max-w-md">
         <h2 className="text-xl font-bold text-center mb-4 text-gray-800">选择难度</h2>
-        <div className="flex gap-3">
+        <div className="flex gap-3" role="radiogroup" aria-label="难度选择">
           <button
+            role="radio"
+            aria-checked={difficulty === 'easy'}
             onClick={() => setDifficulty('easy')}
             className={`flex-1 py-3 px-4 rounded-2xl font-bold text-lg transition-all btn-press ${
               difficulty === 'easy'
@@ -56,6 +62,8 @@ export default function MainMenu({ onShowAchievements }: MainMenuProps) {
             😊 简单
           </button>
           <button
+            role="radio"
+            aria-checked={difficulty === 'medium'}
             onClick={() => setDifficulty('medium')}
             className={`flex-1 py-3 px-4 rounded-2xl font-bold text-lg transition-all btn-press ${
               difficulty === 'medium'
@@ -66,6 +74,8 @@ export default function MainMenu({ onShowAchievements }: MainMenuProps) {
             🙂 普通
           </button>
           <button
+            role="radio"
+            aria-checked={difficulty === 'hard'}
             onClick={() => setDifficulty('hard')}
             className={`flex-1 py-3 px-4 rounded-2xl font-bold text-lg transition-all btn-press ${
               difficulty === 'hard'
@@ -104,14 +114,13 @@ export default function MainMenu({ onShowAchievements }: MainMenuProps) {
           <p className="text-sm font-normal mt-1 opacity-90">逐级挑战，解锁新关卡</p>
         </button>
 
-               <button
+        <button
           onClick={() => setShowWordList(true)}
           className="w-full bg-gradient-to-r from-emerald-400 to-teal-400 text-white py-5 px-8 rounded-3xl font-bold text-2xl shadow-2xl hover:shadow-3xl transition-all hover:scale-105 btn-press"
         >
           📚 单词表
           <p className="text-sm font-normal mt-1 opacity-90">查看所有单词，点击扬声器朗读</p>
         </button>
-
 
         <button
           onClick={onShowAchievements}

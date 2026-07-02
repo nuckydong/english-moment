@@ -15,7 +15,7 @@ export interface ExampleSentence {
 }
 
 export const wordsDatabase: Word[] = [
-  // Easy words (3 letters) - Greetings & Basic
+  // Easy words (≤3 letters) - Greetings & Basic
   { id: 1, word: 'hi', translation: '你好', imageUrl: '👋', difficulty: 'easy', category: 'greetings' },
   { id: 2, word: 'bye', translation: '再见', imageUrl: '👋', difficulty: 'easy', category: 'greetings' },
   { id: 3, word: 'yes', translation: '是的', imageUrl: '✅', difficulty: 'easy', category: 'greetings' },
@@ -52,7 +52,7 @@ export const wordsDatabase: Word[] = [
   { id: 34, word: 'leg', translation: '腿', imageUrl: '🦵', difficulty: 'easy', category: 'body' },
   { id: 35, word: 'ear', translation: '耳朵', imageUrl: '👂', difficulty: 'easy', category: 'body' },
 
-  // Medium words (4 letters) - Classroom & Stationery
+  // Medium words (4-5 letters) - Classroom & Stationery
   { id: 36, word: 'book', translation: '书', imageUrl: '📚', difficulty: 'medium', category: 'stationery' },
   { id: 37, word: 'desk', translation: '桌子', imageUrl: '🪑', difficulty: 'medium', category: 'classroom' },
   { id: 38, word: 'door', translation: '门', imageUrl: '🚪', difficulty: 'medium', category: 'classroom' },
@@ -70,6 +70,7 @@ export const wordsDatabase: Word[] = [
   { id: 50, word: 'frog', translation: '青蛙', imageUrl: '🐸', difficulty: 'medium', category: 'animals' },
   { id: 51, word: 'rose', translation: '玫瑰', imageUrl: '🌹', difficulty: 'medium', category: 'nature' },
   { id: 52, word: 'kite', translation: '风筝', imageUrl: '🪁', difficulty: 'medium', category: 'classroom' },
+  { id: 53, word: 'ruler', translation: '尺子，直尺', imageUrl: '📏', difficulty: 'medium', category: 'stationery' },
   { id: 54, word: 'blue', translation: '蓝色', imageUrl: '🔵', difficulty: 'medium', category: 'colors' },
   { id: 55, word: 'pink', translation: '粉色', imageUrl: '🩷', difficulty: 'medium', category: 'colors' },
   { id: 56, word: 'open', translation: '打开', imageUrl: '📖', difficulty: 'medium', category: 'classroom' },
@@ -88,7 +89,7 @@ export const wordsDatabase: Word[] = [
   { id: 69, word: 'name', translation: '名字', imageUrl: '📛', difficulty: 'medium', category: 'greetings' },
   { id: 70, word: 'here', translation: '这里', imageUrl: '📍', difficulty: 'medium', category: 'classroom' },
 
-  // Hard words (5+ letters) - Advanced Classroom
+  // Hard words (6+ letters) - Advanced Classroom
   { id: 71, word: 'apple', translation: '苹果', imageUrl: '🍎', difficulty: 'hard', category: 'food' },
   { id: 72, word: 'house', translation: '房子', imageUrl: '🏠', difficulty: 'hard', category: 'classroom' },
   { id: 73, word: 'tiger', translation: '老虎', imageUrl: '🐯', difficulty: 'hard', category: 'animals' },
@@ -102,7 +103,6 @@ export const wordsDatabase: Word[] = [
   { id: 81, word: 'table', translation: '桌子', imageUrl: '🪑', difficulty: 'hard', category: 'classroom' },
   { id: 82, word: 'paper', translation: '纸', imageUrl: '📄', difficulty: 'hard', category: 'stationery' },
   { id: 83, word: 'pencil', translation: '铅笔', imageUrl: '✏️', difficulty: 'hard', category: 'stationery' },
-  { id: 53, word: 'ruler', translation: '尺子，直尺', imageUrl: '📏', difficulty: 'medium', category: 'stationery' },
   { id: 84, word: 'eraser', translation: '橡皮', imageUrl: '🧽', difficulty: 'hard', category: 'stationery' },
   { id: 85, word: 'school', translation: '学校', imageUrl: '🏫', difficulty: 'hard', category: 'classroom' },
   { id: 86, word: 'teacher', translation: '老师', imageUrl: '👩‍🏫', difficulty: 'hard', category: 'classroom' },
@@ -143,127 +143,37 @@ export const wordsDatabase: Word[] = [
 ];
 
 export const wordPhonetics: Record<string, string> = {
-  hi: '/haɪ/',
-  bye: '/baɪ/',
-  yes: '/jes/',
-  no: '/nəʊ/',
-  cat: '/kæt/',
-  dog: '/dɔːɡ/',
-  sun: '/sʌn/',
-  pen: '/pen/',
-  cup: '/kʌp/',
-  bag: '/bæɡ/',
-  hat: '/hæt/',
-  bed: '/bed/',
-  car: '/kɑːr/',
-  bus: '/bʌs/',
-  red: '/red/',
-  big: '/bɪɡ/',
-  run: '/rʌn/',
-  sit: '/sɪt/',
-  eat: '/iːt/',
-  mom: '/mɒm/',
-  dad: '/dæd/',
-  boy: '/bɔɪ/',
-  toy: '/tɔɪ/',
-  box: '/bɒks/',
-  fox: '/fɒks/',
-  bee: '/biː/',
-  pig: '/pɪɡ/',
-  owl: '/aʊl/',
-  ant: '/ænt/',
-  one: '/wʌn/',
-  two: '/tuː/',
-  eye: '/aɪ/',
-  arm: '/ɑːrm/',
-  leg: '/leɡ/',
-  ear: '/ɪər/',
-  book: '/bʊk/',
-  desk: '/desk/',
-  door: '/dɔːr/',
-  wall: '/wɔːl/',
-  fish: '/fɪʃ/',
-  tree: '/triː/',
-  moon: '/muːn/',
-  star: '/stɑːr/',
-  bird: '/bɜːrd/',
-  ball: '/bɔːl/',
-  cake: '/keɪk/',
-  milk: '/mɪlk/',
-  duck: '/dʌk/',
-  bear: '/ber/',
-  frog: '/frɒɡ/',
-  rose: '/rəʊz/',
-  kite: '/kaɪt/',
-  ruler: '/ˈruːlər/',
-  blue: '/bluː/',
-  pink: '/pɪŋk/',
-  open: '/ˈəʊpən/',
-  shut: '/ʃʌt/',
-  come: '/kʌm/',
-  look: '/lʊk/',
-  read: '/riːd/',
-  draw: '/drɔː/',
-  girl: '/ɡɜːrl/',
-  hand: '/hænd/',
-  head: '/hed/',
-  foot: '/fʊt/',
-  nice: '/naɪs/',
-  good: '/ɡʊd/',
-  help: '/help/',
-  name: '/neɪm/',
-  here: '/hɪər/',
-  apple: '/ˈæpəl/',
-  house: '/haʊs/',
-  tiger: '/ˈtaɪɡər/',
-  piano: '/piˈænəʊ/',
-  bread: '/bred/',
-  clock: '/klɒk/',
-  smile: '/smaɪl/',
-  water: '/ˈwɔːtər/',
-  heart: '/hɑːrt/',
-  chair: '/tʃeər/',
-  table: '/ˈteɪbəl/',
-  paper: '/ˈpeɪpər/',
-  pencil: '/ˈpensəl/',
-  eraser: '/ɪˈreɪzər/',
-  school: '/skuːl/',
-  teacher: '/ˈtiːtʃər/',
-  student: '/ˈstuːdnt/',
-  hello: '/həˈləʊ/',
-  please: '/pliːz/',
-  thank: '/θæŋk/',
-  sorry: '/ˈsɒri/',
-  listen: '/ˈlɪsən/',
-  write: '/raɪt/',
-  color: '/ˈkʌlər/',
-  yellow: '/ˈjeloʊ/',
-  green: '/ɡriːn/',
-  orange: '/ˈɒrɪndʒ/',
-  purple: '/ˈpɜːrpl/',
-  black: '/blæk/',
-  white: '/waɪt/',
-  three: '/θriː/',
-  four: '/fɔːr/',
-  five: '/faɪv/',
-  seven: '/ˈsevən/',
-  eight: '/eɪt/',
-  nine: '/naɪn/',
-  friend: '/frend/',
-  happy: '/ˈhæpi/',
-  today: '/təˈdeɪ/',
-  morning: '/ˈmɔːrnɪŋ/',
-  flower: '/ˈflaʊər/',
-  family: '/ˈfæməli/',
-  sister: '/ˈsɪstər/',
-  brother: '/ˈbrʌðər/',
-  window: '/ˈwɪndəʊ/',
-  blackboard: '/ˈblækbɔːrd/',
-  marker: '/ˈmɑːrkər/',
-  crayon: '/ˈkreɪən/',
-  notebook: '/ˈnəʊtbʊk/',
-  scissors: '/ˈsɪzərz/',
+  hi: '/haɪ/', bye: '/baɪ/', yes: '/jes/', no: '/nəʊ/', cat: '/kæt/',
+  dog: '/dɔːɡ/', sun: '/sʌn/', pen: '/pen/', cup: '/kʌp/', bag: '/bæɡ/',
+  hat: '/hæt/', bed: '/bed/', car: '/kɑːr/', bus: '/bʌs/', red: '/red/',
+  big: '/bɪɡ/', run: '/rʌn/', sit: '/sɪt/', eat: '/iːt/', mom: '/mɒm/',
+  dad: '/dæd/', boy: '/bɔɪ/', toy: '/tɔɪ/', box: '/bɒks/', fox: '/fɒks/',
+  bee: '/biː/', pig: '/pɪɡ/', owl: '/aʊl/', ant: '/ænt/', one: '/wʌn/',
+  two: '/tuː/', eye: '/aɪ/', arm: '/ɑːrm/', leg: '/leɡ/', ear: '/ɪər/',
+  book: '/bʊk/', desk: '/desk/', door: '/dɔːr/', wall: '/wɔːl/', fish: '/fɪʃ/',
+  tree: '/triː/', moon: '/muːn/', star: '/stɑːr/', bird: '/bɜːrd/', ball: '/bɔːl/',
+  cake: '/keɪk/', milk: '/mɪlk/', duck: '/dʌk/', bear: '/ber/', frog: '/frɒɡ/',
+  rose: '/rəʊz/', kite: '/kaɪt/', ruler: '/ˈruːlər/', blue: '/bluː/', pink: '/pɪŋk/',
+  open: '/ˈəʊpən/', shut: '/ʃʌt/', come: '/kʌm/', look: '/lʊk/', read: '/riːd/',
+  draw: '/drɔː/', girl: '/ɡɜːrl/', hand: '/hænd/', head: '/hed/', foot: '/fʊt/',
+  nice: '/naɪs/', good: '/ɡʊd/', help: '/help/', name: '/neɪm/', here: '/hɪər/',
+  apple: '/ˈæpəl/', house: '/haʊs/', tiger: '/ˈtaɪɡər/', piano: '/piˈænəʊ/',
+  bread: '/bred/', clock: '/klɒk/', smile: '/smaɪl/', water: '/ˈwɔːtər/',
+  heart: '/hɑːrt/', chair: '/tʃeər/', table: '/ˈteɪbəl/', paper: '/ˈpeɪpər/',
+  pencil: '/ˈpensəl/', eraser: '/ɪˈreɪzər/', school: '/skuːl/', teacher: '/ˈtiːtʃər/',
+  student: '/ˈstuːdnt/', hello: '/həˈləʊ/', please: '/pliːz/', thank: '/θæŋk/',
+  sorry: '/ˈsɒri/', listen: '/ˈlɪsən/', write: '/raɪt/', color: '/ˈkʌlər/',
+  yellow: '/ˈjeloʊ/', green: '/ɡriːn/', orange: '/ˈɒrɪndʒ/', purple: '/ˈpɜːrpl/',
+  black: '/blæk/', white: '/waɪt/', three: '/θriː/', four: '/fɔːr/', five: '/faɪv/',
+  seven: '/ˈsevən/', eight: '/eɪt/', nine: '/naɪn/', friend: '/frend/',
+  happy: '/ˈhæpi/', today: '/təˈdeɪ/', morning: '/ˈmɔːrnɪŋ/', flower: '/ˈflaʊər/',
+  family: '/ˈfæməli/', sister: '/ˈsɪstər/', brother: '/ˈbrʌðər/', window: '/ˈwɪndəʊ/',
+  blackboard: '/ˈblækbɔːrd/', marker: '/ˈmɑːrkər/', crayon: '/ˈkreɪən/',
+  notebook: '/ˈnəʊtbʊk/', scissors: '/ˈsɪzərz/',
 };
+
+// 需要特殊处理例句的形容词类单词
+const adjectiveWords = new Set(['big', 'nice', 'good', 'happy', 'red', 'blue', 'pink', 'yellow', 'green', 'purple', 'black', 'white', 'orange']);
 
 const specialExamples: Record<string, ExampleSentence[]> = {
   hi: [
@@ -343,8 +253,8 @@ const specialExamples: Record<string, ExampleSentence[]> = {
     { en: 'I am happy today.', zh: '我今天很高兴。' },
   ],
   here: [
-    { en: 'Come here, please.', zh: '请到这里来。' },
     { en: 'My book is here.', zh: '我的书在这里。' },
+    { en: 'Come here, please.', zh: '请到这里来。' },
   ],
   sun: [
     { en: 'The sun is big and hot.', zh: '太阳又大又热。' },
@@ -681,7 +591,7 @@ const specialExamples: Record<string, ExampleSentence[]> = {
   pencil: [
     { en: 'This is my pencil.', zh: '这是我的铅笔。' },
     { en: 'I write with a pencil.', zh: '我用铅笔写字。' },
-  ]
+  ],
 };
 
 const colorWords = new Set(['red', 'blue', 'pink', 'yellow', 'green', 'purple', 'black', 'white']);
@@ -690,7 +600,6 @@ const numberWords = new Set(['one', 'two', 'three', 'four', 'five', 'seven', 'ei
 function buildExampleSentences(word: Word): ExampleSentence[] {
   const key = word.word.toLowerCase();
   const shortZh = word.translation.split(/[，,]/)[0];
-  const article = /^[aeiou]/i.test(key) ? 'an' : 'a';
 
   if (specialExamples[key]) {
     return specialExamples[key];
@@ -710,26 +619,38 @@ function buildExampleSentences(word: Word): ExampleSentence[] {
     ];
   }
 
-  if (word.category === 'animals') {
+  // 形容词类使用不同模板，避免 "This is a big." 这样的语法错误
+  if (adjectiveWords.has(key)) {
     return [
-      { en: `This is ${article} ${key}.`, zh: `这是一个${shortZh}。` },
-      { en: `I see ${article} ${key}.`, zh: `我看见一个${shortZh}。` },
+      { en: `It is ${key}.`, zh: `它是${shortZh}的。` },
+      { en: `I like this ${key} one.`, zh: `我喜欢这个${shortZh}的。` },
+    ];
+  }
+
+  if (word.category === 'animals') {
+    const article = /^[aeiou]/i.test(key) ? 'an' : 'a';
+    return [
+      { en: `This is ${article} ${key}.`, zh: `这是一只${shortZh}。` },
+      { en: `I see ${article} ${key}.`, zh: `我看见一只${shortZh}。` },
     ];
   }
 
   if (word.category === 'stationery') {
+    const article = /^[aeiou]/i.test(key) ? 'an' : 'a';
     return [
       { en: `This is ${article} ${key}.`, zh: `这是一个${shortZh}。` },
       { en: `I use ${article} ${key}.`, zh: `我使用这个${shortZh}。` },
     ];
   }
 
+  const article = /^[aeiou]/i.test(key) ? 'an' : 'a';
   return [
     { en: `This is ${article} ${key}.`, zh: `这是一个${shortZh}。` },
     { en: `I like this ${key}.`, zh: `我喜欢这个${shortZh}。` },
   ];
 }
 
+// 初始化：设置音标和例句
 wordsDatabase.forEach(word => {
   const key = word.word.toLowerCase();
   if (wordPhonetics[key]) {
@@ -738,9 +659,20 @@ wordsDatabase.forEach(word => {
   word.examples = buildExampleSentences(word);
 });
 
+// 按长度自动分类难度（≤3: easy, 4-5: medium, 6+: hard）
+// 在模块加载时执行，确保难度分类一致
+wordsDatabase.forEach(word => {
+  const length = word.word.length;
+  if (length <= 3) {
+    word.difficulty = 'easy';
+  } else if (length <= 5) {
+    word.difficulty = 'medium';
+  } else {
+    word.difficulty = 'hard';
+  }
+});
 
-
-// Utility function to shuffle array
+// Utility function to shuffle array (Fisher-Yates)
 export function shuffleArray<T>(array: T[]): T[] {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -755,40 +687,18 @@ export function scrambleWord(word: string): string[] {
   return shuffleArray(word.split(''));
 }
 
-// Auto-categorize words by length for better difficulty progression
-function categorizeDifficultyByLength() {
-  wordsDatabase.forEach(word => {
-    const length = word.word.length;
-    if (length <= 3) {
-      word.difficulty = 'easy';
-    } else if (length <= 5) {
-      word.difficulty = 'medium';
-    } else {
-      word.difficulty = 'hard';
-    }
-  });
-}
-
-// Initialize difficulty categorization
-categorizeDifficultyByLength();
-
 export function getWordsByDifficulty(difficulty: 'easy' | 'medium' | 'hard'): Word[] {
   return wordsDatabase.filter(word => word.difficulty === difficulty);
 }
 
-export function getWordsByCategory(category: string): Word[] {
+export function getWordsByCategory(category: Word['category']): Word[] {
   return wordsDatabase.filter(word => word.category === category);
 }
 
 export function getRandomWord(difficulty?: 'easy' | 'medium' | 'hard', recentWordIds: number[] = []): Word {
   const pool = difficulty ? getWordsByDifficulty(difficulty) : wordsDatabase;
-  
-  // Filter out recently used words (last 5)
   const availableWords = pool.filter(word => !recentWordIds.includes(word.id));
-  
-  // If all words have been used recently (unlikely but possible with small pools), use full pool
   const finalPool = availableWords.length > 0 ? availableWords : pool;
-  
   return finalPool[Math.floor(Math.random() * finalPool.length)];
 }
 

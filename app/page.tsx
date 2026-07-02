@@ -2,14 +2,22 @@
 
 import { useState } from 'react';
 import { useGameStore } from '@/store/gameStore';
-import MainMenu from '@/components/MainMenu';
-import TimedMode from '@/components/TimedMode';
-import LevelMode from '@/components/LevelMode';
-import MatchMode from '@/components/MatchMode';
+import dynamic from 'next/dynamic';
 import Achievements from '@/components/Achievements';
 
+const MainMenu = dynamic(() => import('@/components/MainMenu'));
+const TimedMode = dynamic(() => import('@/components/TimedMode'), {
+  loading: () => <div className="min-h-screen flex items-center justify-center"><div className="text-2xl animate-pulse">加载中...</div></div>,
+});
+const LevelMode = dynamic(() => import('@/components/LevelMode'), {
+  loading: () => <div className="min-h-screen flex items-center justify-center"><div className="text-2xl animate-pulse">加载中...</div></div>,
+});
+const MatchMode = dynamic(() => import('@/components/MatchMode'), {
+  loading: () => <div className="min-h-screen flex items-center justify-center"><div className="text-2xl animate-pulse">加载中...</div></div>,
+});
+
 export default function Home() {
-  const { currentMode } = useGameStore();
+  const currentMode = useGameStore((s) => s.currentMode);
   const [showAchievements, setShowAchievements] = useState(false);
 
   return (
@@ -20,7 +28,7 @@ export default function Home() {
       {currentMode === 'timed' && <TimedMode />}
       {currentMode === 'match' && <MatchMode />}
       {currentMode === 'level' && <LevelMode />}
-      
+
       {showAchievements && (
         <Achievements onClose={() => setShowAchievements(false)} />
       )}

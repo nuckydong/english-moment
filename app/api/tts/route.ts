@@ -4,95 +4,98 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 // Token 缓存（内存中缓存，避免频繁请求）
 let cachedToken: string | null = null;
 let tokenExpireTime: number = 0;
+
+// 简单的内存速率限制
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW = 60_000; // 1 分钟
+const RATE_LIMIT_MAX = 30; // 每分钟最多 30 次
+
+function checkRateLimit(clientId: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(clientId);
+  if (!entry || now > entry.resetTime) {
+    rateLimitMap.set(clientId, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+    return true;
+  }
+  if (entry.count >= RATE_LIMIT_MAX) return false;
+  entry.count++;
+  return true;
+}
 
 /**
  * 获取百度 Access Token
  */
 async function getBaiduAccessToken(): Promise<string> {
   const now = Date.now();
-  
-  // 如果 token 还未过期，直接返回缓存的 token
+
   if (cachedToken && now < tokenExpireTime) {
-    return cachedToken!; // Non-null assertion since we checked it exists
+    return cachedToken;
   }
 
   const apiKey = process.env.BAIDU_API_KEY;
   const secretKey = process.env.BAIDU_SECRET_KEY;
 
   if (!apiKey || !secretKey) {
-    console.error('BAIDU_API_KEY:', apiKey ? '已设置' : '未设置');
-    console.error('BAIDU_SECRET_KEY:', secretKey ? '已设置' : '未设置');
     throw new Error('Baidu API credentials not configured');
   }
 
-  try {
-    const response = await fetch(
-      `https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${apiKey}&client_secret=${secretKey}`,
-      { method: 'POST' }
-    );
+  const response = await fetch(
+    `https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${apiKey}&client_secret=${secretKey}`,
+    { method: 'POST' }
+  );
 
-    const data = await response.json();
-    
-    if (data.access_token) {
-      cachedToken = data.access_token;
-      // Token 有效期30天，提前1天刷新
-      tokenExpireTime = now + (29 * 24 * 60 * 60 * 1000);
-      return cachedToken!; // Non-null assertion since we just assigned it
-    } else {
-      throw new Error('Failed to get access token: ' + JSON.stringify(data));
-    }
-  } catch (error) {
-    console.error('Error getting Baidu access token:', error);
-    throw error;
+  const data = await response.json();
+
+  if (data.access_token) {
+    cachedToken = data.access_token as string;
+    tokenExpireTime = now + (29 * 24 * 60 * 60 * 1000);
+    return cachedToken!;
   }
+
+  throw new Error('Failed to get access token');
 }
 
 /**
  * POST /api/tts
- * 请求体: { text: string, lang?: 'zh' | 'en' }
+ * 请求体: { text: string, lang?: 'zh' | 'en', spd?: number, pit?: number, vol?: number, per?: number }
  * 返回: 音频文件流
  */
 export async function POST(request: NextRequest) {
   try {
+    // 速率限制检查
+    const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown';
+    if (!checkRateLimit(clientIp)) {
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': '60' } }
+      );
+    }
+
     const body = await request.json();
     const { text, lang = 'en', spd = 3, pit = 5, vol = 5, per = 0 } = body;
 
-    if (!text) {
+    // 输入校验
+    if (!text || typeof text !== 'string' || text.length === 0 || text.length > 200) {
       return NextResponse.json(
-        { error: 'Text parameter is required' },
+        { error: 'Text parameter is required (1-200 characters)' },
         { status: 400 }
       );
     }
 
-    // 构造本地缓存文件路径（public/tts-cache 下）
-    const cacheDir = path.join(process.cwd(), 'public', 'tts-cache');
-    const cacheFileName = `${encodeURIComponent(text)}_${lang}_${spd}_${pit}_${vol}_${per}.mp3`;
-    const cachePath = path.join(cacheDir, cacheFileName);
+    // 参数类型转换和范围校验
+    const safeSpd = Math.min(Math.max(Number(spd) || 3, 0), 15);
+    const safePit = Math.min(Math.max(Number(pit) || 5, 0), 15);
+    const safeVol = Math.min(Math.max(Number(vol) || 5, 0), 15);
+    const safePer = Number(per) || 0;
 
-    // 确保缓存目录存在
-    if (!fs.existsSync(cacheDir)) {
-      fs.mkdirSync(cacheDir, { recursive: true });
-    }
-
-    // 如果缓存文件已存在，直接从磁盘读取返回
-    if (fs.existsSync(cachePath)) {
-      const cachedBuffer = fs.readFileSync(cachePath);
-      return new NextResponse(cachedBuffer, {
-        status: 200,
-        headers: {
-          'Content-Type': 'audio/mp3',
-          'Cache-Control': 'public, max-age=31536000',
-        },
-      });
-    }
-
-    // 如果没有缓存，则调用百度 TTS 接口
+    // 调用百度 TTS 接口
     const token = await getBaiduAccessToken();
 
     const params = new URLSearchParams({
@@ -101,10 +104,10 @@ export async function POST(request: NextRequest) {
       cuid: 'word-puzzle-game',
       ctp: '1',
       lan: lang,
-      spd: spd.toString(),
-      pit: pit.toString(),
-      vol: vol.toString(),
-      per: per.toString(),
+      spd: safeSpd.toString(),
+      pit: safePit.toString(),
+      vol: safeVol.toString(),
+      per: safePer.toString(),
       aue: '3',
     });
 
@@ -114,38 +117,27 @@ export async function POST(request: NextRequest) {
     );
 
     const contentType = ttsResponse.headers.get('content-type');
-    
+
     if (contentType && contentType.includes('audio')) {
       const audioArrayBuffer = await ttsResponse.arrayBuffer();
       const audioBuffer = Buffer.from(audioArrayBuffer);
 
-      // 写入本地缓存（失败不会影响正常返回）
-      try {
-        fs.writeFileSync(cachePath, audioBuffer);
-      } catch (e) {
-        console.error('Failed to write TTS cache file:', e);
-      }
-      
       return new NextResponse(audioBuffer, {
         status: 200,
         headers: {
           'Content-Type': 'audio/mp3',
-          'Cache-Control': 'public, max-age=31536000',
+          'Cache-Control': 'public, max-age=31536000, immutable',
         },
       });
     } else {
-      const errorData = await ttsResponse.json();
-      console.error('Baidu TTS API error:', errorData);
-      
       return NextResponse.json(
-        { error: 'TTS API error', details: errorData },
-        { status: 500 }
+        { error: 'TTS service error' },
+        { status: 502 }
       );
     }
-  } catch (error) {
-    console.error('TTS API route error:', error);
+  } catch {
     return NextResponse.json(
-      { error: 'Internal server error', message: String(error) },
+      { error: 'TTS service unavailable' },
       { status: 500 }
     );
   }

@@ -5,13 +5,16 @@
 ## ✨ 功能特点
 
 ### 🎯 游戏模式
-- **⏰ 计时挑战模式**：60秒内答对尽可能多的单词，挑战高分
+- **⏰ 计时挑战模式**：120秒内答对尽可能多的单词，挑战高分
 - **🎯 闯关模式**：10个精心设计的关卡，逐级解锁，每关5个单词
+- **🧩 单词连连看**：配对英语和中文，配对成功就消失
+- **📚 单词表**：查看所有单词，点击扬声器朗读
 
 ### 📚 学习内容
-- 100+个适合初学的英语单词
-- 3个难度等级：简单（3字母）、普通（4字母）、困难（5字母+）
+- 120个适合初学的英语单词
+- 3个难度等级：简单（≤3字母）、普通（4-5字母）、困难（6字母+）
 - 图文结合：每个单词配有emoji表情和中文释义
+- 每个单词配有音标和例句
 
 ### 🏆 成就系统
 - 8种不同成就徽章
@@ -28,12 +31,18 @@
 - 大按钮设计，方便小朋友操作
 - 清晰易读的字体和色彩
 
+### ♿ 无障碍支持
+- 所有模态框支持 ARIA 属性和键盘导航
+- 计时器带 live region 朗读
+- 难度选择器使用 radiogroup 语义
+- 所有交互元素有 aria-label
+
 ## 🚀 快速开始
 
 ### 安装依赖
 
 ```bash
-npm install
+npm install --legacy-peer-deps
 ```
 
 ### 开发模式
@@ -51,13 +60,23 @@ npm run build
 npm start
 ```
 
+### Docker 部署
+
+```bash
+# 构建镜像（使用 standalone 模式，镜像更小）
+docker build -t english-moment .
+
+# 运行容器（通过 -e 传入百度 API 密钥）
+docker run -p 3000:3000 -e BAIDU_API_KEY="your_key" -e BAIDU_SECRET_KEY="your_secret" english-moment
+```
+
 ## 🎮 游戏玩法
 
 ### 计时挑战模式
 1. 选择难度等级（简单/普通/困难）
 2. 点击"计时挑战"按钮开始游戏
-3. 看图识意，输入正确的英文单词
-4. 60秒内答对越多，得分越高
+3. 看图识意，拼出正确的英文单词
+4. 120秒内答对越多，得分越高
 5. 连续答对可获得连击加分
 
 ### 闯关模式
@@ -82,11 +101,12 @@ npm start
 
 ## 🛠️ 技术栈
 
-- **框架**：Next.js 15 (App Router)
+- **框架**：Next.js 16 (App Router, Standalone 输出)
 - **语言**：TypeScript
 - **样式**：Tailwind CSS
-- **状态管理**：Zustand (with persist middleware)
-- **UI组件**：React 18
+- **状态管理**：Zustand (with persist middleware, skipHydration)
+- **UI组件**：React 19
+- **语音合成**：百度 TTS API + 浏览器 SpeechSynthesis 回退
 
 ## 📁 项目结构
 
@@ -95,72 +115,66 @@ npm start
 ├── app/
 │   ├── globals.css          # 全局样式
 │   ├── layout.tsx           # 根布局
-│   |── page.tsx             # 主页面（游戏路由）
-|   └── api
-|       └── tts
-|            └── route.ts    # 调用百度API的实现（朗读，只调一次；后续存入本地public\tts-cache）
+│   ├── page.tsx             # 主页面（懒加载游戏模式）
+│   ├── StoreHydration.tsx   # Zustand 水合组件
+│   ├── error.tsx            # 全局错误边界
+│   ├── loading.tsx          # 全局加载状态
+│   └── api/
+│       └── tts/
+│            └── route.ts    # 百度 TTS API 路由（带输入校验和速率限制）
 ├── components/
 │   ├── Achievements.tsx     # 成就系统组件
+│   ├── LetterGameWithCallback.tsx  # 核心拼字游戏组件
 │   ├── LevelMode.tsx        # 闯关模式组件
 │   ├── MainMenu.tsx         # 主菜单组件
-│   └── TimedMode.tsx        # 计时挑战组件
+│   ├── MatchMode.tsx        # 连连看模式组件
+│   ├── Modal.tsx            # 可复用模态框组件
+│   ├── TimedMode.tsx        # 计时挑战组件
+│   └── WordList.tsx         # 单词表组件
 ├── lib/
-│   |── words.ts             # 单词数据库
-|   └── seepch.ts            # 单词朗读，优先读本地（pulic/tts-cache）；本地没有会调用百度的API，需要配置环境变量：BAIDU_API_KEY="yours"和 BAIDU_SECRET_KEY="yours" ，可以去百度申请（免费额度够用）
+│   ├── words.ts             # 单词数据库（120词，按长度自动分类难度）
+│   └── speech.ts            # 语音合成工具（百度TTS + 浏览器回退）
 ├── store/
-│   └── gameStore.ts         # 游戏状态管理
+│   └── gameStore.ts         # 游戏状态管理（Zustand + persist）
+├── types/
+│   └── index.ts             # 共享类型定义
 └── public/
-    └── images/              # 图片资源
+    └── tts-cache/            # TTS 音频缓存
 ```
 
-## 🎨 设计理念
+## 🔧 配置
 
-- **儿童友好**：使用鲜艳明亮的色彩和大字体
-- **游戏化**：通过积分、成就、星级评价激励学习
-- **渐进式**：从简单到困难，循序渐进
-- **即时反馈**：正确/错误立即显示，强化学习效果
-- **持续激励**：成就系统和进度追踪保持学习动力
+### 百度 TTS API
 
-## 📝 词汇列表
+在 `.env.local` 中配置：
 
-游戏包含120个精选单词，涵盖：
-- 动物：cat, dog, fish, bird, bear等
-- 物品：pen, cup, book, cake, ball等
-- 自然：sun, moon, star, tree, flower等
-- 食物：apple, bread, milk等
-- 其他常用词汇
+```
+BAIDU_API_KEY="your_api_key"
+BAIDU_SECRET_KEY="your_secret_key"
+```
 
-## 🔧 自定义配置
+可前往[百度智能云](https://cloud.baidu.com/product/speech/tts)申请，免费额度充足。
+
+如未配置或 API 不可用，会自动回退到浏览器内置的 SpeechSynthesis API。
 
 ### 修改单词库
 
-编辑 `lib/words.ts` 文件添加或修改单词：
-
-```typescript
-export const wordsDatabase: Word[] = [
-  { 
-    id: 1, 
-    word: 'cat', 
-    translation: '猫', 
-    imageUrl: '🐱', 
-    difficulty: 'easy' 
-  },
-  // 添加更多单词...
-];
-```
+编辑 `lib/words.ts` 文件添加或修改单词。难度按单词长度自动分类：
+- ≤3 字母：easy
+- 4-5 字母：medium
+- 6+ 字母：hard
 
 ### 调整游戏参数
 
-- **计时模式时长**：在 `components/TimedMode.tsx` 中修改 `useState(60)`
-- **每关单词数**：在 `components/LevelMode.tsx` 中修改 `wordsPerLevel`
-- **关卡总数**：在 `store/gameStore.ts` 中修改 `Array.from({ length: 10 })`
+- **计时模式时长**：在 `components/TimedMode.tsx` 中修改 `GAME_DURATION`
+- **每关单词数**：在 `components/LevelMode.tsx` 中修改 `WORDS_PER_LEVEL`
+- **关卡总数**：在 `store/gameStore.ts` 中修改 `createInitialLevelsForDifficulty`
 - **评分标准**：在各组件中修改星级时间阈值
 
 ## 🌟 未来计划
 
 - [ ] 添加音效和背景音乐
 - [ ] 真实图片替换emoji表情
-- [ ] 语音朗读单词功能
 - [ ] 多人对战模式
 - [ ] 家长监控面板
 - [ ] 更多主题和皮肤

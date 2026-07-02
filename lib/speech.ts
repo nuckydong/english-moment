@@ -1,28 +1,49 @@
 /**
- * 语音合成工具 - 使用百度语音合成 API
- * Speech synthesis utility using Baidu TTS API
+ * 语音合成工具 - 使用百度语音合成 API，带浏览器 SpeechSynthesis 回退
+ * Speech synthesis utility using Baidu TTS API with browser fallback
  */
 
 let currentAudio: HTMLAudioElement | null = null;
 let currentAudioUrl: string | null = null;
 
 /**
- * 朗读英语单词（使用百度语音合成）
+ * 浏览器内置语音合成回退
+ */
+function browserSpeak(text: string, onEnd?: () => void): boolean {
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+    return false;
+  }
+
+  try {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    utterance.rate = 0.7;
+    utterance.pitch = 1.1;
+    utterance.volume = 0.9;
+    if (onEnd) {
+      utterance.onend = onEnd;
+      utterance.onerror = () => onEnd?.();
+    }
+    window.speechSynthesis.speak(utterance);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * 朗读英语单词（使用百度语音合成，失败时回退到浏览器 TTS）
  * @param word 要朗读的单词
  * @param options 朗读选项（目前只使用 onEnd 回调）
  */
 export async function speakWord(
   word: string,
   options: {
-    rate?: number;
-    pitch?: number;
-    volume?: number;
     onEnd?: () => void;
   } = {}
-): Promise<void> {
+): Promise<boolean> {
   try {
-    console.log('🔊 开始朗读 (百度语音):', word);
-
     // 如果有正在播放的音频，先停止并清理
     if (currentAudio) {
       try {
@@ -38,17 +59,8 @@ export async function speakWord(
 
     const response = await fetch('/api/tts', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        text: word,
-        lang: 'en',
-        spd: 3,
-        pit: 5,
-        vol: 8,
-        per: 5118,
-      }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: word, lang: 'en', spd: 3, pit: 5, vol: 8, per: 5118 }),
     });
 
     if (!response.ok) {
@@ -62,40 +74,50 @@ export async function speakWord(
     currentAudio = audio;
     currentAudioUrl = audioUrl;
 
-    return new Promise((resolve, reject) => {
+    return new Promise<boolean>((resolve) => {
       audio.onended = () => {
-        if (currentAudioUrl) {
-          URL.revokeObjectURL(currentAudioUrl);
-        }
+        if (currentAudioUrl) URL.revokeObjectURL(currentAudioUrl);
         currentAudio = null;
         currentAudioUrl = null;
-        console.log('🔊 朗读完成:', word);
-        if (options.onEnd) {
-          options.onEnd();
-        }
-        resolve();
+        options.onEnd?.();
+        resolve(true);
       };
 
-      audio.onerror = (error) => {
-        if (currentAudioUrl) {
-          URL.revokeObjectURL(currentAudioUrl);
-        }
+      audio.onerror = () => {
+        if (currentAudioUrl) URL.revokeObjectURL(currentAudioUrl);
         currentAudio = null;
         currentAudioUrl = null;
-        console.error('🔊 音频播放错误:', error);
-        reject(error);
+        // 回退到浏览器 TTS
+        if (browserSpeak(word, options.onEnd)) {
+          resolve(true);
+        } else {
+          options.onEnd?.();
+          resolve(false);
+        }
       };
 
-      audio.play().catch((error) => {
-        console.error('🔊 播放失败:', error);
-        reject(error);
+      audio.play().catch(() => {
+        // 播放失败，回退到浏览器 TTS
+        if (currentAudioUrl) URL.revokeObjectURL(currentAudioUrl);
+        currentAudio = null;
+        currentAudioUrl = null;
+        if (browserSpeak(word, options.onEnd)) {
+          resolve(true);
+        } else {
+          options.onEnd?.();
+          resolve(false);
+        }
       });
     });
-  } catch (error) {
-    console.error('🔊 百度语音朗读失败:', error);
+  } catch {
+    // 百度 API 不可用，回退到浏览器 TTS
+    if (browserSpeak(word, options.onEnd)) {
+      return true;
+    }
+    options.onEnd?.();
+    return false;
   }
 }
-
 
 /**
  * 停止当前朗读
@@ -106,12 +128,12 @@ export function stopSpeaking(): void {
       currentAudio.pause();
       currentAudio.currentTime = 0;
     } catch {}
-    console.log('🔊 停止朗读');
-    if (currentAudioUrl) {
-      URL.revokeObjectURL(currentAudioUrl);
-    }
+    if (currentAudioUrl) URL.revokeObjectURL(currentAudioUrl);
     currentAudio = null;
     currentAudioUrl = null;
+  }
+  if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
   }
 }
 
@@ -121,4 +143,3 @@ export function stopSpeaking(): void {
 export function isSpeaking(): boolean {
   return !!(currentAudio && !currentAudio.paused && currentAudio.currentTime > 0);
 }
-

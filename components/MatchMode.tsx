@@ -20,7 +20,8 @@ const getPastelClass = (id: number, offset = 0) => {
 };
 
 export default function MatchMode() {
-  const { difficulty, setMode } = useGameStore();
+  const difficulty = useGameStore((s) => s.difficulty);
+  const setMode = useGameStore((s) => s.setMode);
   const [roundWords, setRoundWords] = useState<Word[]>([]);
   const [chineseOrder, setChineseOrder] = useState<number[]>([]);
   const [englishOrder, setEnglishOrder] = useState<number[]>([]);
@@ -74,6 +75,8 @@ export default function MatchMode() {
     startRound();
   }, [startRound]);
 
+  const getWordById = (id: number) => roundWords.find((w) => w.id === id);
+
   const handleChineseClick = (id: number) => {
     if (isChecking) return;
     if (matchedIds.includes(id)) return;
@@ -83,14 +86,16 @@ export default function MatchMode() {
   const handleEnglishClick = (id: number) => {
     if (isChecking) return;
     if (matchedIds.includes(id)) return;
+
+    // 只在选中新单词时播放发音，取消选中时不播放
+    const isSelecting = selectedEnglishId !== id;
     setSelectedEnglishId((prev) => (prev === id ? null : id));
-    const word = getWordById(id);
-    if (word) {
-      speakWord(word.word, {
-        rate: 0.7,
-        pitch: 1.1,
-        volume: 0.9,
-      });
+
+    if (isSelecting) {
+      const word = getWordById(id);
+      if (word) {
+        speakWord(word.word);
+      }
     }
   };
 
@@ -123,8 +128,6 @@ export default function MatchMode() {
     }
   }, [selectedChineseId, selectedEnglishId, roundWords.length]);
 
-  const getWordById = (id: number) => roundWords.find((w) => w.id === id);
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-sky-50 to-emerald-50">
       <div className="bg-white shadow-lg p-4 mb-6">
@@ -134,7 +137,7 @@ export default function MatchMode() {
               <button
                 onClick={() => setMode('menu')}
                 className="flex items-center justify-center w-12 h-12 bg-gray-100 hover:bg-gray-200 rounded-xl shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95"
-                title="返回主页"
+                aria-label="返回主页"
               >
                 <span className="text-2xl">🏠</span>
               </button>
@@ -159,7 +162,7 @@ export default function MatchMode() {
         <div className="mb-3 text-center text-sm font-semibold text-gray-600">
           点击任意卡片，配对正确的中文和英文
         </div>
-        <div className="flex flex-wrap justify-center gap-3">
+        <div className="flex flex-wrap justify-center gap-3" role="group" aria-label="单词配对卡片">
           {cardOrder.map(({ id, side }) => {
             const word = getWordById(id);
             if (!word) return null;
@@ -184,6 +187,7 @@ export default function MatchMode() {
                 type="button"
                 disabled={matched || isChecking}
                 onClick={handleClick}
+                aria-label={`${side === 'chinese' ? '中文' : '英文'}：${side === 'chinese' ? word.translation : word.word}${matched ? '，已配对' : ''}`}
                 className={`inline-flex items-center gap-3 rounded-2xl border px-4 py-3 text-left text-base md:text-lg font-semibold transition-all ${
                   matched
                     ? 'bg-gray-100 text-gray-400 border-gray-200 opacity-60 cursor-default'
@@ -195,7 +199,7 @@ export default function MatchMode() {
                 }`}
               >
                 {side === 'chinese' && (
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/70 text-lg">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/70 text-lg" aria-hidden="true">
                     {word.imageUrl}
                   </span>
                 )}
@@ -215,7 +219,7 @@ export default function MatchMode() {
         </div>
 
         {showRoundComplete && (
-          <div className="mt-8 flex flex-col items-center gap-4">
+          <div className="mt-8 flex flex-col items-center gap-4" role="status" aria-live="polite">
             <div className="text-3xl md:text-4xl">🎉</div>
             <div className="text-xl md:text-2xl font-bold text-green-600">本轮全部配对成功！</div>
             <button

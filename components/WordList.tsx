@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { wordsDatabase } from '@/lib/words';
 import { speakWord } from '@/lib/speech';
 
@@ -8,18 +9,25 @@ interface WordListProps {
 }
 
 export default function WordList({ onClose }: WordListProps) {
-  const sortedWords = [...wordsDatabase].sort((a, b) =>
-    a.word.localeCompare(b.word),
+  // 使用 useMemo 缓存排序结果，避免每次渲染都重新排序
+  const sortedWords = useMemo(
+    () => [...wordsDatabase].sort((a, b) => a.word.localeCompare(b.word)),
+    []
   );
 
   let currentInitial = '';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="wordlist-title"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+    >
       <div className="flex h-full w-full max-w-4xl flex-col bg-gradient-to-br from-blue-50 to-purple-50 md:h-[90vh] md:rounded-3xl md:shadow-2xl">
         <div className="flex items-center justify-between border-b border-purple-100 bg-white/70 px-4 py-3 md:px-6">
           <div>
-            <div className="text-lg font-bold text-purple-700 md:text-2xl">
+            <div id="wordlist-title" className="text-lg font-bold text-purple-700 md:text-2xl">
               📚 单词表
             </div>
             <div className="text-xs text-gray-500 md:text-sm">
@@ -30,6 +38,7 @@ export default function WordList({ onClose }: WordListProps) {
             type="button"
             onClick={onClose}
             className="rounded-2xl bg-red-100 px-3 py-1 text-sm font-semibold text-red-600 hover:bg-red-200 md:px-4 md:py-2"
+            aria-label="返回首页"
           >
             返回首页
           </button>
@@ -46,7 +55,7 @@ export default function WordList({ onClose }: WordListProps) {
             return (
               <div key={word.id}>
                 {showHeader && (
-                  <div className="mt-3 flex items-center text-xs font-bold uppercase tracking-wide text-gray-500 first:mt-0 md:text-sm">
+                  <div className="mt-3 flex items-center text-xs font-bold uppercase tracking-wide text-gray-500 first:mt-0 md:text-sm" aria-hidden="true">
                     <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-purple-100 text-purple-700">
                       {initial}
                     </span>
@@ -56,7 +65,7 @@ export default function WordList({ onClose }: WordListProps) {
 
                 <div className="mt-2 rounded-3xl bg-white/90 px-3 py-2 shadow-sm md:mt-3 md:px-4 md:py-3">
                   <div className="flex items-center gap-3 md:gap-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-purple-50 text-2xl md:h-12 md:w-12 md:text-3xl">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-purple-50 text-2xl md:h-12 md:w-12 md:text-3xl" aria-hidden="true">
                       {word.imageUrl}
                     </div>
                     <div className="flex items-center gap-3 overflow-x-auto whitespace-nowrap md:gap-4">
@@ -73,13 +82,9 @@ export default function WordList({ onClose }: WordListProps) {
                       </div>
                       <button
                         type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          speakWord(word.word);
-                        }}
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); speakWord(word.word); }}
                         className="inline-flex items-center justify-center rounded-2xl bg-blue-50 px-2 py-1 text-base text-blue-600 hover:bg-blue-100 md:px-2.5 md:py-1.5"
-                        aria-label="朗读单词"
+                        aria-label={`朗读单词 ${word.word}`}
                       >
                         🔊
                       </button>
@@ -99,13 +104,9 @@ export default function WordList({ onClose }: WordListProps) {
                             </div>
                             <button
                               type="button"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                speakWord(example.en);
-                              }}
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); speakWord(example.en); }}
                               className="inline-flex items-center justify-center rounded-xl bg-blue-50 px-2 py-1 text-sm text-blue-600 hover:bg-blue-100"
-                              aria-label="朗读例句"
+                              aria-label={`朗读例句 ${example.en}`}
                             >
                               🔊
                             </button>
